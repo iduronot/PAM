@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Detail Pengaduan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= pengaduan.no_tiket %></h1>
+      <a href="/pengaduan" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><span class="card-title">Informasi Pengaduan</span></div>
+          <table>
+            <tr><td style="color:var(--muted);width:130px;">No. Tiket</td><td><strong><%= pengaduan.no_tiket %></strong></td></tr>
+            <tr><td style="color:var(--muted);">Pelanggan</td><td><% if (pengaduan.pelanggan) { %><a href="/pelanggan/<%= pengaduan.pelanggan_id %>" style="color:var(--primary);text-decoration:none;"><strong><%= pengaduan.pelanggan.nama %></strong></a><br><small><%= pengaduan.pelanggan.no_pelanggan %> &bull; <%= pengaduan.pelanggan.no_hp || '-' %></small><% } %></td></tr>
+            <tr><td style="color:var(--muted);">Jenis</td><td><%= pengaduan.jenis_pengaduan.replace(/_/g,' ') %></td></tr>
+            <tr><td style="color:var(--muted);">Prioritas</td><td>
+              <% const pm = { darurat: 'danger', tinggi: 'warning', sedang: 'info', rendah: 'muted' }; %>
+              <span class="badge badge-<%= pm[pengaduan.prioritas] %>"><%= pengaduan.prioritas %></span>
+            </td></tr>
+            <tr><td style="color:var(--muted);">Status</td><td>
+              <% const sm = { baru: 'info', diverifikasi: 'purple', ditugaskan: 'warning', dalam_proses: 'warning', selesai: 'success', ditolak: 'danger', dibatalkan: 'muted' }; %>
+              <span class="badge badge-<%= sm[pengaduan.status] || 'muted' %>"><%= pengaduan.status.replace(/_/g,' ') %></span>
+            </td></tr>
+            <tr><td style="color:var(--muted);">Petugas</td><td><%= pengaduan.petugas ? pengaduan.petugas.nama : '-' %></td></tr>
+            <tr><td style="color:var(--muted);">Dibuat</td><td><%= formatTanggal(pengaduan.createdAt) %></td></tr>
+            <% if (pengaduan.selesai_at) { %><tr><td style="color:var(--muted);">Selesai</td><td><%= formatTanggal(pengaduan.selesai_at) %></td></tr><% } %>
+          </table>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Deskripsi Masalah:</div>
+            <p style="font-size:13px;"><%= pengaduan.deskripsi %></p>
+          </div>
+          <% if (pengaduan.foto_sebelum) { %>
+          <div style="margin-top:12px;"><img src="<%= pengaduan.foto_sebelum %>" style="max-width:200px;border-radius:8px;"></div>
+          <% } %>
+          <% if (pengaduan.catatan_tindakan) { %>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Catatan Tindakan:</div>
+            <p style="font-size:13px;"><%= pengaduan.catatan_tindakan %></p>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- Riwayat Status -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Riwayat Status</span></div>
+          <% if (pengaduan.log && pengaduan.log.length > 0) { %>
+            <% pengaduan.log.slice().reverse().forEach(l => { %>
+            <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0;"></div>
+              <div>
+                <div style="font-size:13px;"><% if (l.status_lama) { %><span style="color:var(--muted);"><%= l.status_lama.replace(/_/g,' ') %></span> → <% } %><strong><%= l.status_baru.replace(/_/g,' ') %></strong></div>
+                <% if (l.catatan) { %><div style="font-size:12px;color:var(--muted);"><%= l.catatan %></div><% } %>
+                <div style="font-size:11px;color:var(--muted);"><%= l.user ? l.user.nama : '-' %> &bull; <%= formatTanggal(l.createdAt) %></div>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+            <p style="color:var(--muted);font-size:13px;">Belum ada riwayat</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Update Status -->
+      <% if (!['selesai','ditolak','dibatalkan'].includes(pengaduan.status) && ['super_admin','admin_pam','petugas_meter'].includes(user.role)) { %>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Update Status Pengaduan</span></div>
+        <form method="POST" action="/pengaduan/<%= pengaduan.id %>/status" enctype="multipart/form-data">
+          <div class="form-group">
+            <label class="form-label">Status Baru</label>
+            <select name="status" class="form-control">
+              <% const statusOptions = ['diverifikasi','ditugaskan','dalam_proses','menunggu_pelanggan','selesai','ditolak','dibatalkan']; %>
+              <% statusOptions.forEach(s => { if (s !== pengaduan.status) { %>
+              <option value="<%= s %>"><%= s.replace(/_/g,' ') %></option>
+              <% }}) %>
+            </select>
+          </div>
+          <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+          <div class="form-group">
+            <label class="form-label">Tugaskan Petugas</label>
+            <select name="petugas_id" class="form-control">
+              <option value="">-- Tidak diubah --</option>
+              <% petugasList.forEach(p => { %>
+              <option value="<%= p.id %>" <%=pengaduan.petugas_id==p.id?'selected':''%>><%= p.nama %> (<%= p.role %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          <% } %>
+          <div class="form-group">
+            <label class="form-label">Catatan Tindakan</label>
+            <textarea name="catatan_tindakan" class="form-control" rows="2" placeholder="Tindakan yang dilakukan..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan Log</label>
+            <input type="text" name="catatan_log" class="form-control" placeholder="Catatan singkat update ini...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Foto Sesudah Penanganan</label>
+            <input type="file" name="foto_sesudah" class="form-control" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan Penutup (jika selesai)</label>
+            <textarea name="catatan_penutup" class="form-control" rows="2" placeholder="Ringkasan penyelesaian..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Status</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

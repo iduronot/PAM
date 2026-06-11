@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Pengaduan Saya' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header"><h1 class="page-title">Pengaduan Saya</h1></div>
+
+    <!-- Form buat pengaduan baru -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Ajukan Pengaduan Baru</span></div>
+      <form method="POST" action="/pelanggan-portal/pengaduan/buat" style="max-width:500px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jenis Pengaduan *</label>
+            <select name="jenis_pengaduan" class="form-control" required>
+              <option value="air_tidak_mengalir">Air Tidak Mengalir</option>
+              <option value="air_keruh">Air Keruh</option>
+              <option value="meter_rusak">Meter Rusak</option>
+              <option value="kebocoran_pipa">Kebocoran Pipa</option>
+              <option value="tagihan_tidak_sesuai">Tagihan Tidak Sesuai</option>
+              <option value="sambungan_bermasalah">Sambungan Bermasalah</option>
+              <option value="pasang_baru">Pasang Baru</option>
+              <option value="tutup_sementara">Tutup Sementara</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prioritas</label>
+            <select name="prioritas" class="form-control">
+              <option value="rendah">Rendah</option>
+              <option value="sedang" selected>Sedang</option>
+              <option value="tinggi">Tinggi</option>
+              <option value="darurat">Darurat</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi Masalah *</label>
+          <textarea name="deskripsi" class="form-control" rows="3" required placeholder="Jelaskan masalah yang dialami..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Kirim Pengaduan</button>
+      </form>
+    </div>
+
+    <!-- Daftar pengaduan -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Riwayat Pengaduan</span></div>
+      <% if (pengaduanList.length === 0) { %>
+      <p style="color:var(--muted);font-size:13px;">Belum ada pengaduan</p>
+      <% } %>
+      <% pengaduanList.forEach(p => { %>
+      <div style="padding:12px;background:var(--sub-bg);border-radius:10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <div>
+            <span style="font-weight:600;font-size:13px;color:var(--primary);"><%= p.no_tiket %></span>
+            <span style="font-size:12px;color:var(--muted);margin-left:8px;"><%= p.jenis_pengaduan.replace(/_/g,' ') %></span>
+          </div>
+          <% const sm = { baru: 'info', diverifikasi: 'purple', ditugaskan: 'warning', dalam_proses: 'warning', selesai: 'success', ditolak: 'danger', dibatalkan: 'muted' }; %>
+          <span class="badge badge-<%= sm[p.status] || 'muted' %>"><%= p.status.replace(/_/g,' ') %></span>
+        </div>
+        <p style="font-size:13px;margin:0;"><%= p.deskripsi %></p>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Dibuat: <%= formatTanggal(p.createdAt) %></div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

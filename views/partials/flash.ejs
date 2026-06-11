@@ -1,0 +1,25 @@
+<% if (success && success.length > 0) { %>
+  <% success.forEach(msg => { %>
+    <div class="alert alert-success" id="flashAlert">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <%= msg %>
+    </div>
+  <% }) %>
+<% } %>
+<% if (error && error.length > 0) { %>
+  <% error.forEach(msg => { %>
+    <div class="alert alert-error" id="flashAlert">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+      <%= msg %>
+    </div>
+  <% }) %>
+<% } %>
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('#flashAlert').forEach(el => {
+      el.style.transition = 'opacity .5s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 500);
+    });
+  }, 4000);
+</script>

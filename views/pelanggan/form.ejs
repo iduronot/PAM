@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: mode === 'tambah' ? 'Tambah Pelanggan' : 'Edit Pelanggan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= mode === 'tambah' ? 'Tambah Pelanggan Baru' : 'Edit Data Pelanggan' %></h1>
+      <a href="/pelanggan" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <form method="POST" action="/pelanggan/<%= mode === 'edit' ? pelanggan.id + '/edit' : 'tambah' %>">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start;">
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><span class="card-title">Data Utama</span></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nomor Sambungan *</label>
+                <input type="text" name="no_sambungan" class="form-control" value="<%= pelanggan.no_sambungan || '' %>" required placeholder="Contoh: SR-001">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tanggal Daftar</label>
+                <input type="date" name="tanggal_daftar" class="form-control" value="<%= pelanggan.tanggal_daftar ? pelanggan.tanggal_daftar.toString().slice(0,10) : new Date().toISOString().slice(0,10) %>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nama Pelanggan *</label>
+              <input type="text" name="nama" class="form-control" value="<%= pelanggan.nama || '' %>" required placeholder="Nama lengkap">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">NIK / Identitas</label>
+                <input type="text" name="nik" class="form-control" value="<%= pelanggan.nik || '' %>" placeholder="16 digit NIK">
+              </div>
+              <div class="form-group">
+                <label class="form-label">No HP / WhatsApp</label>
+                <input type="text" name="no_hp" class="form-control" value="<%= pelanggan.no_hp || '' %>" placeholder="08xxxxxxxxxx">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="<%= pelanggan.email || '' %>" placeholder="email@contoh.com (opsional)">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Alamat</span></div>
+            <div class="form-group">
+              <label class="form-label">Alamat Lengkap *</label>
+              <textarea name="alamat" class="form-control" rows="2" required placeholder="Jalan, no rumah..."><%= pelanggan.alamat || '' %></textarea>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label">RT/RW</label>
+                <input type="text" name="rt_rw" class="form-control" value="<%= pelanggan.rt_rw || '' %>" placeholder="003/002">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kelurahan/Desa</label>
+                <input type="text" name="kelurahan" class="form-control" value="<%= pelanggan.kelurahan || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kecamatan</label>
+                <input type="text" name="kecamatan" class="form-control" value="<%= pelanggan.kecamatan || '' %>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catatan</label>
+              <textarea name="catatan" class="form-control" rows="2" placeholder="Catatan khusus..."><%= pelanggan.catatan || '' %></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><span class="card-title">Klasifikasi</span></div>
+            <div class="form-group">
+              <label class="form-label">Kategori Pelanggan</label>
+              <select name="kategori_id" class="form-control">
+                <option value="">-- Pilih Kategori --</option>
+                <% kategoriList.forEach(k => { %>
+                <option value="<%= k.id %>" <%= pelanggan.kategori_id == k.id ? 'selected' : '' %>><%= k.nama %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rute Baca Meter</label>
+              <select name="rute_id" class="form-control">
+                <option value="">-- Pilih Rute --</option>
+                <% ruteList.forEach(r => { %>
+                <option value="<%= r.id %>" <%= pelanggan.rute_id == r.id ? 'selected' : '' %>><%= r.nama_rute %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-control">
+                <option value="aktif" <%= pelanggan.status === 'aktif' ? 'selected' : '' %>>Aktif</option>
+                <option value="nonaktif" <%= pelanggan.status === 'nonaktif' ? 'selected' : '' %>>Nonaktif</option>
+                <option value="putus_sementara" <%= pelanggan.status === 'putus_sementara' ? 'selected' : '' %>>Putus Sementara</option>
+                <option value="putus_permanen" <%= pelanggan.status === 'putus_permanen' ? 'selected' : '' %>>Putus Permanen</option>
+              </select>
+            </div>
+          </div>
+
+          <% if (mode === 'tambah') { %>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Akun Portal</span></div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" name="buat_akun" value="1" id="buatAkun" onchange="document.getElementById('akunFields').style.display=this.checked?'block':'none'">
+                Buat akun portal pelanggan
+              </label>
+            </div>
+            <div id="akunFields" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" name="username_akun" class="form-control" placeholder="Username login">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password_akun" class="form-control" placeholder="Min. 6 karakter">
+              </div>
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+          <%= mode === 'tambah' ? 'Simpan Pelanggan' : 'Perbarui Data' %>
+        </button>
+        <a href="/pelanggan" class="btn btn-secondary">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

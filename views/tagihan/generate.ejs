@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Generate Tagihan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Generate Tagihan Massal</h1>
+      <a href="/tagihan" class="btn btn-secondary">Kembali</a>
+    </div>
+    <div class="card" style="max-width:480px;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+        Sistem akan mengambil semua pencatatan meter yang sudah diverifikasi pada periode yang dipilih, lalu menghitung tagihan berdasarkan tarif.
+      </p>
+      <form method="POST" action="/tagihan/generate">
+        <div class="form-group">
+          <label class="form-label">Periode Baca Meter *</label>
+          <select name="periode_id" class="form-control" required>
+            <option value="">-- Pilih Periode --</option>
+            <% periodeList.forEach(p => { %>
+            <option value="<%= p.id %>"><%= p.nama_periode %> (<%= p.status %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tarif yang Digunakan *</label>
+          <select name="tarif_id" class="form-control" required>
+            <option value="">-- Pilih Tarif --</option>
+            <% tarifList.forEach(t => { %>
+            <option value="<%= t.id %>"><%= t.nama_tarif %> — Rp <%= t.harga_per_m3 %>/m³ + admin Rp <%= t.biaya_admin %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--warning);margin-bottom:16px;">
+          ⚠️ Tagihan yang sudah ada di periode ini tidak akan dibuat ulang (di-skip). Proses ini hanya membuat tagihan baru.
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;">Generate Tagihan</button>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

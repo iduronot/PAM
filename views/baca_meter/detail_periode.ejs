@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Baca Meter — ' + periode.nama_periode }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Baca Meter: <%= periode.nama_periode %></h1>
+      <a href="/baca-meter" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+      <div class="stat-card blue"><div class="stat-label">Total Pelanggan</div><div class="stat-value"><%= stats.total %></div></div>
+      <div class="stat-card green"><div class="stat-label">Sudah Dibaca</div><div class="stat-value"><%= stats.terbaca %></div></div>
+      <div class="stat-card orange"><div class="stat-label">Belum Dibaca</div><div class="stat-value"><%= stats.belum %></div></div>
+      <div class="stat-card purple"><div class="stat-label">Terverifikasi</div><div class="stat-value"><%= stats.verified %></div></div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="card" style="margin-bottom:16px;padding:14px 20px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+        <span>Progress pembacaan</span>
+        <span><%= stats.total > 0 ? Math.round(stats.terbaca/stats.total*100) : 0 %>%</span>
+      </div>
+      <div style="background:var(--sub-bg);border-radius:6px;height:8px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,var(--primary),var(--secondary));height:100%;border-radius:6px;width:<%= stats.total > 0 ? Math.round(stats.terbaca/stats.total*100) : 0 %>%;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form method="GET" class="search-bar" style="margin-bottom:14px;">
+        <input type="hidden" name="periode_id" value="<%= periode.id %>">
+        <select name="rute_id" class="form-control" style="width:auto;">
+          <option value="">Semua Rute</option>
+          <% ruteList.forEach(r => { %>
+          <option value="<%= r.id %>" <%=rute_id==r.id?'selected':''%>><%= r.nama_rute %></option>
+          <% }) %>
+        </select>
+        <select name="status" class="form-control" style="width:auto;">
+          <option value="">Semua Status</option>
+          <option value="belum_dibaca" <%=status==='belum_dibaca'?'selected':''%>>Belum Dibaca</option>
+          <option value="terbaca" <%=status==='terbaca'?'selected':''%>>Terbaca</option>
+          <option value="anomali" <%=status==='anomali'?'selected':''%>>Anomali</option>
+          <option value="tidak_dapat_diakses" <%=status==='tidak_dapat_diakses'?'selected':''%>>Tidak Dapat Diakses</option>
+          <option value="meter_rusak" <%=status==='meter_rusak'?'selected':''%>>Meter Rusak</option>
+          <option value="rumah_kosong" <%=status==='rumah_kosong'?'selected':''%>>Rumah Kosong</option>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Pelanggan</th><th>Nama</th><th>Rute</th><th>Angka Lalu</th><th>Angka Sekarang</th><th>Pemakaian</th><th>Status</th><th>Verifikasi</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (pencatatanList.length === 0) { %><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
+            <% pencatatanList.forEach(c => { %>
+            <tr>
+              <td><span style="font-weight:600;color:var(--primary);"><%= c.pelanggan ? c.pelanggan.no_pelanggan : '-' %></span></td>
+              <td><%= c.pelanggan ? c.pelanggan.nama : '-' %></td>
+              <td><small><%= c.pelanggan && c.pelanggan.rute ? c.pelanggan.rute.nama_rute : '-' %></small></td>
+              <td><%= c.angka_sebelumnya %> m³</td>
+              <td><%= c.angka_sekarang !== null && c.angka_sekarang !== undefined ? c.angka_sekarang + ' m³' : '-' %></td>
+              <td><% if (c.pemakaian > 0) { %><strong><%= c.pemakaian %> m³</strong><% } else { %><span style="color:var(--muted);">-</span><% } %></td>
+              <td>
+                <% const sm = { belum_dibaca: 'muted', terbaca: 'success', anomali: 'danger', tidak_dapat_diakses: 'warning', meter_rusak: 'danger', rumah_kosong: 'warning' }; %>
+                <span class="badge badge-<%= sm[c.status] || 'muted' %>" style="font-size:10px;"><%= c.status.replace(/_/g,' ') %></span>
+              </td>
+              <td>
+                <% if (c.status_verifikasi === 'verified') { %>
+                  <span class="badge badge-success" style="font-size:10px;">✓ Verified</span>
+                <% } else if (c.status_verifikasi === 'rejected') { %>
+                  <span class="badge badge-danger" style="font-size:10px;">✗ Ditolak</span>
+                <% } else { %>
+                  <span class="badge badge-muted" style="font-size:10px;">Pending</span>
+                <% } %>
+              </td>
+              <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;">
+                <a href="/baca-meter/input/<%= c.id %>" class="btn btn-<%= c.status === 'belum_dibaca' ? 'primary' : 'secondary' %> btn-xs">
+                  <%= c.status === 'belum_dibaca' ? 'Input' : 'Edit' %>
+                </a>
+                <% if (['super_admin','admin_pam'].includes(user.role) && c.status !== 'belum_dibaca' && c.status_verifikasi === 'pending') { %>
+                <form method="POST" action="/baca-meter/verifikasi/<%= c.id %>" style="display:inline;">
+                  <input type="hidden" name="aksi" value="verified">
+                  <button type="submit" class="btn btn-success btn-xs">✓ Verify</button>
+                </form>
+                <% } %>
+                <% if (c.status === 'terbaca' && ['super_admin','admin_pam','kasir','petugas_meter'].includes(user.role)) { %>
+                <a href="/baca-meter/catat-dan-bayar/<%= c.id %>" class="btn btn-xs" style="background:var(--success);color:#fff;">Bayar</a>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (['super_admin','admin_pam'].includes(user.role) && stats.verified > 0) { %>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <a href="/tagihan/generate?periode_id=<%= periode.id %>" class="btn btn-primary">Generate Tagihan dari Periode Ini</a>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

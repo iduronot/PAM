@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Laporan Tunggakan' }) %>
+  <div class="content">
+    <div class="page-header">
+      <h1 class="page-title">Laporan Tunggakan</h1>
+      <div style="display:flex;gap:8px;">
+        <a href="/laporan/tunggakan?export=excel" class="btn btn-success btn-sm">⬇ Export Excel</a>
+        <a href="/laporan" class="btn btn-secondary btn-sm">Kembali</a>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px;padding:12px 20px;">
+      <strong>Total Tunggakan: <span style="color:var(--danger)"><%= formatRupiah(total) %></span></strong> dari <%= tagihanList.length %> tagihan
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Periode</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (tagihanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada tunggakan</td></tr><% } %>
+            <% tagihanList.forEach(t => { %>
+            <tr>
+              <td><%= t.pelanggan ? t.pelanggan.no_pelanggan : '-' %></td>
+              <td><strong><%= t.pelanggan ? t.pelanggan.nama : '-' %></strong></td>
+              <td><small><%= t.no_tagihan %></small></td>
+              <td><%= t.periode ? t.periode.nama_periode : '-' %></td>
+              <td><strong style="color:var(--danger);"><%= formatRupiah(t.total_tagihan) %></strong></td>
+              <td style="<%= new Date(t.tanggal_jatuh_tempo) < new Date() ? 'color:var(--danger);font-weight:600;' : '' %>"><%= formatTanggal(t.tanggal_jatuh_tempo) %></td>
+              <td><span class="badge badge-<%= t.status==='terlambat'?'danger':'warning' %>"><%= t.status %></span></td>
+              <td><a href="/pembayaran/catat?tagihan_id=<%= t.id %>" class="btn btn-success btn-xs">Bayar</a></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

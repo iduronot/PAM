@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Input Baca Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Input Angka Meter</h1>
+      <a href="/baca-meter/periode/<%= pencatatan.periode_id %>" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+      <!-- Info Pelanggan -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Informasi Pelanggan</span></div>
+        <table>
+          <tr><td style="color:var(--muted);width:130px;">No. Pelanggan</td><td><strong><%= pencatatan.pelanggan ? pencatatan.pelanggan.no_pelanggan : '-' %></strong></td></tr>
+          <tr><td style="color:var(--muted);">Nama</td><td><strong><%= pencatatan.pelanggan ? pencatatan.pelanggan.nama : '-' %></strong></td></tr>
+          <tr><td style="color:var(--muted);">Alamat</td><td><%= pencatatan.pelanggan ? pencatatan.pelanggan.alamat : '-' %></td></tr>
+          <tr><td style="color:var(--muted);">No. Meter</td><td><%= pencatatan.meter ? pencatatan.meter.no_meter : '-' %></td></tr>
+          <tr><td style="color:var(--muted);">Periode</td><td><strong><%= pencatatan.periode ? pencatatan.periode.nama_periode : '-' %></strong></td></tr>
+          <tr><td style="color:var(--muted);">Angka Lalu</td><td style="font-size:20px;font-weight:700;color:var(--primary);"><%= pencatatan.angka_sebelumnya %> m³</td></tr>
+        </table>
+      </div>
+
+      <!-- Form Input -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Input Pembacaan</span></div>
+        <form method="POST" action="/baca-meter/input/<%= pencatatan.id %>" enctype="multipart/form-data">
+          <div class="form-group">
+            <label class="form-label">Angka Meter Sekarang (m³)</label>
+            <input type="number" name="angka_sekarang" class="form-control" style="font-size:24px;padding:14px;font-weight:700;"
+              value="<%= pencatatan.angka_sekarang || '' %>"
+              min="0" step="0.01" placeholder="0.00"
+              oninput="hitungPemakaian(this.value)">
+            <div id="pemakaianInfo" style="margin-top:8px;font-size:13px;color:var(--muted);">
+              Pemakaian: <strong id="pemakaianVal">-</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status Pembacaan</label>
+            <select name="status" class="form-control">
+              <option value="terbaca">Terbaca</option>
+              <option value="tidak_dapat_diakses">Tidak Dapat Diakses</option>
+              <option value="meter_rusak">Meter Rusak</option>
+              <option value="rumah_kosong">Rumah Kosong</option>
+              <option value="anomali">Anomali</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Foto Meter</label>
+            <input type="file" name="foto_meter" class="form-control" accept="image/*" capture="camera">
+            <% if (pencatatan.foto_meter) { %><img src="<%= pencatatan.foto_meter %>" style="width:120px;margin-top:8px;border-radius:6px;"><% } %>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea name="catatan" class="form-control" rows="2" placeholder="Catatan kondisi meter, lokasi, dsb..."><%= pencatatan.catatan || '' %></textarea>
+          </div>
+
+          <input type="hidden" name="langsung_bayar" value="0" id="flagLangsungBayar">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button type="submit" class="btn btn-secondary" style="padding:14px;font-size:14px;">
+              Simpan Saja
+            </button>
+            <button type="button" class="btn btn-primary" style="padding:14px;font-size:14px;background:linear-gradient(135deg,var(--primary),var(--secondary));"
+              onclick="document.getElementById('flagLangsungBayar').value='1'; this.closest('form').submit();">
+              Simpan &amp; Langsung Bayar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const angkaLalu = <%= pencatatan.angka_sebelumnya || 0 %>;
+function hitungPemakaian(val) {
+  const sekarang = parseFloat(val) || 0;
+  const pemakaian = sekarang - angkaLalu;
+  const el = document.getElementById('pemakaianVal');
+  if (pemakaian < 0) {
+    el.style.color = 'var(--danger)';
+    el.textContent = pemakaian.toFixed(2) + ' m³ ⚠️ Anomali';
+  } else {
+    el.style.color = 'var(--success)';
+    el.textContent = pemakaian.toFixed(2) + ' m³';
+  }
+}
+</script>
+</body>
+</html>

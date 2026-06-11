@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Laporan Pembayaran' }) %>
+  <div class="content">
+    <div class="page-header">
+      <h1 class="page-title">Laporan Pembayaran</h1>
+      <div style="display:flex;gap:8px;">
+        <a href="/laporan/pembayaran?dari=<%= dari||'' %>&sampai=<%= sampai||'' %>&export=excel" class="btn btn-success btn-sm">⬇ Export Excel</a>
+        <a href="/laporan" class="btn btn-secondary btn-sm">Kembali</a>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <form method="GET" class="search-bar">
+        <input name="dari" type="date" class="form-control" style="width:auto;" value="<%= dari || '' %>">
+        <input name="sampai" type="date" class="form-control" style="width:auto;" value="<%= sampai || '' %>">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <a href="/laporan/pembayaran" class="btn btn-secondary btn-sm">Reset</a>
+        <strong style="margin-left:8px;color:var(--success);">Total: <%= formatRupiah(total) %></strong>
+      </form>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Pembayaran</th><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th></tr></thead>
+          <tbody>
+            <% if (pembayaranList.length === 0) { %><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
+            <% pembayaranList.forEach(p => { %>
+            <tr>
+              <td><small><%= p.no_pembayaran %></small></td>
+              <td><%= p.pelanggan ? p.pelanggan.no_pelanggan : '-' %></td>
+              <td><strong><%= p.pelanggan ? p.pelanggan.nama : '-' %></strong></td>
+              <td><small><%= p.tagihan ? p.tagihan.no_tagihan : '-' %></small></td>
+              <td><%= formatTanggal(p.tanggal_bayar) %></td>
+              <td><strong style="color:var(--success);"><%= formatRupiah(p.jumlah_bayar) %></strong></td>
+              <td><span class="badge badge-info"><%= p.metode %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

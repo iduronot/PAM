@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: mode === 'tambah' ? 'Tambah Tarif' : 'Edit Tarif' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= mode === 'tambah' ? 'Tambah Tarif Baru' : 'Edit Tarif' %></h1>
+      <a href="/tarif" class="btn btn-secondary">Kembali</a>
+    </div>
+    <div class="card" style="max-width:560px;">
+      <div style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--primary);">
+        💡 Rumus tagihan: (Pemakaian × Harga/m³) + Biaya Admin + Biaya Minimum (jika pemakaian &lt; min m³)
+      </div>
+      <form method="POST" action="/tarif/<%= mode === 'edit' ? tarif.id + '/edit' : 'tambah' %>">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama Tarif *</label>
+            <input type="text" name="nama_tarif" class="form-control" value="<%= tarif.nama_tarif || '' %>" required placeholder="Contoh: Tarif Rumah Tangga">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategori Pelanggan</label>
+            <select name="kategori_id" class="form-control">
+              <option value="">-- Semua Kategori --</option>
+              <% kategoriList.forEach(k => { %>
+              <option value="<%= k.id %>" <%=tarif.kategori_id==k.id?'selected':''%>><%= k.nama %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Harga per m³ (Rp) *</label>
+            <input type="number" name="harga_per_m3" class="form-control" value="<%= tarif.harga_per_m3 || 0 %>" min="0" step="100" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Biaya Administrasi (Rp)</label>
+            <input type="number" name="biaya_admin" class="form-control" value="<%= tarif.biaya_admin || 0 %>" min="0" step="500">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Biaya Minimum (Rp)</label>
+            <input type="number" name="biaya_minimum" class="form-control" value="<%= tarif.biaya_minimum || 0 %>" min="0" step="500">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Minimum Pemakaian (m³)</label>
+            <input type="number" name="minimum_m3" class="form-control" value="<%= tarif.minimum_m3 || 0 %>" min="0" step="0.5">
+            <small style="color:var(--muted);">Jika pemakaian &lt; ini, dikenakan biaya minimum</small>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Denda Keterlambatan (%)</label>
+            <input type="number" name="denda_persen" class="form-control" value="<%= tarif.denda_persen || 0 %>" min="0" max="100" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Berlaku</label>
+            <input type="date" name="tanggal_berlaku" class="form-control" value="<%= tarif.tanggal_berlaku ? tarif.tanggal_berlaku.toString().slice(0,10) : '' %>">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" name="is_active" value="true" <%= tarif.is_active !== false ? 'checked' : '' %>>
+            Tarif aktif (langsung digunakan)
+          </label>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary">Simpan Tarif</button>
+          <a href="/tarif" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

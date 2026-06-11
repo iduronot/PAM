@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Kategori Pelanggan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header"><h1 class="page-title">Kategori Pelanggan</h1><a href="/pengaturan" class="btn btn-secondary">Kembali</a></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Tambah Kategori</span></div>
+        <form method="POST" action="/pengaturan/kategori/tambah">
+          <div class="form-group"><label class="form-label">Nama Kategori *</label><input type="text" name="nama" class="form-control" required placeholder="Contoh: Rumah Tangga"></div>
+          <div class="form-group"><label class="form-label">Deskripsi</label><textarea name="deskripsi" class="form-control" rows="2" placeholder="Keterangan singkat..."></textarea></div>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Daftar Kategori</span></div>
+        <% if (kategoriList.length === 0) { %><p style="color:var(--muted);font-size:13px;">Belum ada kategori</p><% } %>
+        <% kategoriList.forEach(k => { %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--sub-bg);border-radius:8px;margin-bottom:8px;">
+          <div><strong><%= k.nama %></strong><% if (k.deskripsi) { %><br><small style="color:var(--muted);"><%= k.deskripsi %></small><% } %></div>
+          <div style="display:flex;gap:6px;">
+            <% if (user.role === 'super_admin') { %>
+            <form method="POST" action="/pengaturan/kategori/<%= k.id %>/hapus" onsubmit="return confirm('Hapus kategori ini?')">
+              <button type="submit" class="btn btn-danger btn-xs">Hapus</button>
+            </form>
+            <% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

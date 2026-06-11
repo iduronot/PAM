@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Portal Pelanggan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+
+    <div style="background:linear-gradient(135deg,rgba(14,165,233,.15),rgba(99,102,241,.1));border:1px solid rgba(14,165,233,.2);border-radius:16px;padding:20px 24px;margin-bottom:20px;">
+      <div style="font-size:13px;color:var(--muted);">Selamat datang,</div>
+      <h2 style="font-size:22px;font-weight:700;margin:4px 0;"><%= pelangkan.nama %></h2>
+      <div style="font-size:13px;color:var(--muted);">No. Pelanggan: <strong style="color:var(--text)"><%= pelangkan.no_pelanggan %></strong> &bull; Sambungan: <strong style="color:var(--text)"><%= pelangkan.no_sambungan %></strong></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;"><%= pelangkan.alamat %></div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-card red">
+        <div class="stat-label">Tagihan Belum Bayar</div>
+        <div class="stat-value"><%= tagihanTerbuka.length %></div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Pembayaran Terakhir</div>
+        <div class="stat-value" style="font-size:16px;"><%= pembayaranTerakhir.length > 0 ? formatRupiah(pembayaranTerakhir[0].jumlah_bayar) : '-' %></div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Pengaduan Aktif</div>
+        <div class="stat-value"><%= pengaduanAktif.length %></div>
+      </div>
+    </div>
+
+    <!-- Tagihan belum bayar -->
+    <% if (tagihanTerbuka.length > 0) { %>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Tagihan Belum Lunas</span><a href="/pelanggan-portal/tagihan" class="btn btn-secondary btn-xs">Lihat Semua</a></div>
+      <% tagihanTerbuka.forEach(t => { %>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:10px;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:600;"><%= t.no_tagihan %></div>
+          <div style="font-size:12px;color:var(--muted);">Jatuh tempo: <span style="color:var(--danger);"><%= formatTanggal(t.tanggal_jatuh_tempo) %></span></div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:var(--danger);"><%= formatRupiah(t.total_tagihan) %></div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Quick actions -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Menu</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <a href="/pelanggan-portal/tagihan" class="btn btn-secondary" style="justify-content:center;padding:14px;">📋 Tagihan Saya</a>
+        <a href="/pelanggan-portal/riwayat-bayar" class="btn btn-secondary" style="justify-content:center;padding:14px;">💰 Riwayat Bayar</a>
+        <a href="/pelanggan-portal/pengaduan" class="btn btn-secondary" style="justify-content:center;padding:14px;">📩 Pengaduan</a>
+        <a href="/logout" class="btn btn-danger" style="justify-content:center;padding:14px;">Keluar</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

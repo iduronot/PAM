@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Buat Periode Baca Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Buat Periode Baca Meter Baru</h1>
+      <a href="/baca-meter" class="btn btn-secondary">Kembali</a>
+    </div>
+    <div class="card" style="max-width:480px;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">Membuat periode akan otomatis menyiapkan daftar pencatatan untuk semua pelanggan aktif yang memiliki meter aktif.</p>
+      <form method="POST" action="/baca-meter/periode/buat">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Bulan *</label>
+            <select name="bulan" class="form-control" required>
+              <% const bulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']; %>
+              <% bulanList.forEach((b, i) => { %>
+              <option value="<%= i+1 %>" <%= bulanDefault === i+1 ? 'selected' : '' %>><%= b %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tahun *</label>
+            <input type="number" name="tahun" class="form-control" value="<%= tahunDefault %>" min="2020" max="2099" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tanggal Mulai Baca</label>
+            <input type="date" name="tanggal_mulai" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Selesai Baca</label>
+            <input type="date" name="tanggal_selesai" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tanggal Jatuh Tempo Tagihan</label>
+          <input type="date" name="tanggal_jatuh_tempo" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Buat Periode & Siapkan Pencatatan</button>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

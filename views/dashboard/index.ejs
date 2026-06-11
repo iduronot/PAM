@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Dashboard' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-label">Pelanggan Aktif</div>
+        <div class="stat-value"><%= totalPelangganAktif %></div>
+        <div class="stat-sub"><%= totalPelangganNonaktif %> nonaktif</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Total Tagihan Bulan Ini</div>
+        <div class="stat-value" style="font-size:18px"><%= formatRupiah(totalTagihanBulanIni) %></div>
+        <div class="stat-sub">Lunas: <%= formatRupiah(totalLunasBulanIni) %></div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Total Tunggakan</div>
+        <div class="stat-value" style="font-size:18px"><%= formatRupiah(totalTunggakan) %></div>
+        <div class="stat-sub"><%= pelangganMenunggak %> pelanggan</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Pengaduan Baru</div>
+        <div class="stat-value"><%= pengaduanBaru %></div>
+        <div class="stat-sub"><%= pengaduanBelumSelesai %> belum selesai</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+      <!-- Progress Baca Meter -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Progres Baca Meter Bulan Ini</span>
+          <% if (periodeAktif) { %><span class="badge badge-info"><%= periodeAktif.nama_periode %></span><% } %>
+        </div>
+        <% if (progressBaca.total > 0) { %>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+              <span>Terbaca: <%= progressBaca.terbaca %></span>
+              <span>Belum: <%= progressBaca.belum %></span>
+              <span>Total: <%= progressBaca.total %></span>
+            </div>
+            <div style="background:var(--sub-bg);border-radius:6px;height:10px;overflow:hidden;">
+              <div style="background:linear-gradient(90deg,var(--primary),var(--secondary));height:100%;border-radius:6px;width:<%= Math.round(progressBaca.terbaca/progressBaca.total*100) %>%;transition:width .5s;"></div>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;"><%= Math.round(progressBaca.terbaca/progressBaca.total*100) %>% selesai</div>
+          </div>
+        <% } else { %>
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">
+            Belum ada periode baca meter aktif<br>
+            <a href="/baca-meter/periode/buat" class="btn btn-primary btn-sm" style="margin-top:10px;">Buat Periode</a>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Aksi Cepat</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <a href="/pelanggan/tambah" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            Tambah Pelanggan
+          </a>
+          <a href="/baca-meter" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Baca Meter
+          </a>
+          <a href="/tagihan/generate" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Generate Tagihan
+          </a>
+          <a href="/pembayaran/catat" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            Catat Pembayaran
+          </a>
+          <a href="/pengaduan/buat" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            Buat Pengaduan
+          </a>
+          <a href="/laporan/tunggakan" class="btn btn-secondary" style="justify-content:center;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Laporan Tunggakan
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Tren Tagihan & Pembayaran 6 Bulan</span>
+      </div>
+      <canvas id="chartTagihan" height="80"></canvas>
+    </div>
+  </div>
+</div>
+<script>
+const data = <%- chartData %>;
+const ctx = document.getElementById('chartTagihan').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: data.map(d => d.label),
+    datasets: [
+      { label: 'Total Tagihan', data: data.map(d => d.total), backgroundColor: 'rgba(14,165,233,.3)', borderColor: '#0EA5E9', borderWidth: 2, borderRadius: 6 },
+      { label: 'Terbayar', data: data.map(d => d.lunas), backgroundColor: 'rgba(16,185,129,.3)', borderColor: '#10B981', borderWidth: 2, borderRadius: 6 },
+    ],
+  },
+  options: {
+    responsive: true, interaction: { mode: 'index' },
+    plugins: { legend: { labels: { color: '#94A3B8', font: { family: 'Outfit' } } } },
+    scales: {
+      x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.05)' } },
+      y: { ticks: { color: '#94A3B8', callback: v => 'Rp ' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,.05)' } },
+    },
+  },
+});
+</script>
+</body>
+</html>

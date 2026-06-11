@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Detail Tagihan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= tagihan.no_tagihan %></h1>
+      <div style="display:flex;gap:8px;">
+        <% if (['final','terlambat'].includes(tagihan.status)) { %>
+        <a href="/pembayaran/catat?tagihan_id=<%= tagihan.id %>" class="btn btn-success">Bayar Sekarang</a>
+        <% } %>
+        <a href="/tagihan" class="btn btn-secondary">Kembali</a>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Detail Tagihan</span></div>
+        <table>
+          <tr><td style="color:var(--muted);width:150px;">No. Tagihan</td><td><strong><%= tagihan.no_tagihan %></strong></td></tr>
+          <tr><td style="color:var(--muted);">Pelanggan</td><td><% if (tagihan.pelanggan) { %><a href="/pelanggan/<%= tagihan.pelanggan_id %>" style="color:var(--primary);text-decoration:none;"><strong><%= tagihan.pelanggan.nama %></strong></a><br><small style="color:var(--muted);"><%= tagihan.pelanggan.no_pelanggan %></small><% } %></td></tr>
+          <tr><td style="color:var(--muted);">Periode</td><td><%= tagihan.periode ? tagihan.periode.nama_periode : '-' %></td></tr>
+          <tr><td style="color:var(--muted);">Pemakaian</td><td><strong><%= tagihan.pemakaian %> m³</strong></td></tr>
+          <tr><td style="color:var(--muted);">Jatuh Tempo</td><td><%= formatTanggal(tagihan.tanggal_jatuh_tempo) %></td></tr>
+          <tr><td style="color:var(--muted);">Status</td><td>
+            <% const sm = { draft: 'muted', final: 'warning', lunas: 'success', terlambat: 'danger', dibatalkan: 'muted' }; %>
+            <span class="badge badge-<%= sm[tagihan.status] %>"><%= tagihan.status %></span>
+          </td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Rincian Biaya</span></div>
+        <table>
+          <tr><td style="color:var(--muted);">Harga per m³</td><td><%= formatRupiah(tagihan.harga_per_m3) %></td></tr>
+          <tr><td style="color:var(--muted);">Subtotal Air (<%= tagihan.pemakaian %> m³)</td><td><%= formatRupiah(tagihan.subtotal_air) %></td></tr>
+          <tr><td style="color:var(--muted);">Biaya Administrasi</td><td><%= formatRupiah(tagihan.biaya_admin) %></td></tr>
+          <% if (parseFloat(tagihan.biaya_minimum) > 0) { %><tr><td style="color:var(--muted);">Biaya Minimum</td><td><%= formatRupiah(tagihan.biaya_minimum) %></td></tr><% } %>
+          <% if (parseFloat(tagihan.denda) > 0) { %><tr><td style="color:var(--danger);">Denda Keterlambatan</td><td style="color:var(--danger);"><%= formatRupiah(tagihan.denda) %></td></tr><% } %>
+          <% if (parseFloat(tagihan.penyesuaian) !== 0) { %><tr><td style="color:var(--muted);">Penyesuaian</td><td><%= formatRupiah(tagihan.penyesuaian) %></td></tr><% } %>
+          <tr style="border-top:1px solid var(--border);"><td><strong>Total Tagihan</strong></td><td><strong style="font-size:18px;color:var(--primary);"><%= formatRupiah(tagihan.total_tagihan) %></strong></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <% if (tagihan.pembayaran && tagihan.pembayaran.length > 0) { %>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header"><span class="card-title">Riwayat Pembayaran</span></div>
+      <% tagihan.pembayaran.forEach(p => { %>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--sub-bg);border-radius:8px;margin-bottom:8px;">
+        <div>
+          <strong><%= p.no_pembayaran %></strong>
+          <div style="font-size:12px;color:var(--muted);"><%= formatTanggal(p.tanggal_bayar) %> &bull; <%= p.metode %></div>
+        </div>
+        <div style="text-align:right;">
+          <strong style="color:var(--success);"><%= formatRupiah(p.jumlah_bayar) %></strong><br>
+          <a href="/pembayaran/<%= p.id %>/bukti" class="btn btn-secondary btn-xs" style="margin-top:4px;">Bukti</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <% if (['super_admin'].includes(user.role) && tagihan.status !== 'lunas' && tagihan.status !== 'dibatalkan') { %>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header"><span class="card-title" style="color:var(--danger);">Batalkan Tagihan</span></div>
+      <form method="POST" action="/tagihan/<%= tagihan.id %>/batal" onsubmit="return confirm('Batalkan tagihan ini?')">
+        <div class="form-group">
+          <label class="form-label">Alasan Pembatalan</label>
+          <input type="text" name="catatan" class="form-control" required placeholder="Masukkan alasan...">
+        </div>
+        <button type="submit" class="btn btn-danger btn-sm">Batalkan Tagihan</button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

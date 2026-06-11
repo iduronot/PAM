@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Pengaduan Pelanggan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Pengaduan <span style="font-size:14px;color:var(--muted);font-weight:400;">(<%= count %> total)</span></h1>
+      <% if (['super_admin','admin_pam','kasir'].includes(user.role)) { %>
+      <a href="/pengaduan/buat" class="btn btn-primary">+ Buat Pengaduan</a>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <form method="GET" class="search-bar">
+        <select name="status" class="form-control" style="width:auto;">
+          <option value="">Semua Status</option>
+          <option value="baru" <%=status==='baru'?'selected':''%>>Baru</option>
+          <option value="diverifikasi" <%=status==='diverifikasi'?'selected':''%>>Diverifikasi</option>
+          <option value="ditugaskan" <%=status==='ditugaskan'?'selected':''%>>Ditugaskan</option>
+          <option value="dalam_proses" <%=status==='dalam_proses'?'selected':''%>>Dalam Proses</option>
+          <option value="selesai" <%=status==='selesai'?'selected':''%>>Selesai</option>
+        </select>
+        <select name="prioritas" class="form-control" style="width:auto;">
+          <option value="">Semua Prioritas</option>
+          <option value="darurat" <%=prioritas==='darurat'?'selected':''%>>Darurat</option>
+          <option value="tinggi" <%=prioritas==='tinggi'?'selected':''%>>Tinggi</option>
+          <option value="sedang" <%=prioritas==='sedang'?'selected':''%>>Sedang</option>
+          <option value="rendah" <%=prioritas==='rendah'?'selected':''%>>Rendah</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="/pengaduan" class="btn btn-secondary">Reset</a>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Tiket</th><th>Pelanggan</th><th>Jenis</th><th>Prioritas</th><th>Petugas</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (pengaduanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada pengaduan</td></tr><% } %>
+            <% pengaduanList.forEach(p => { %>
+            <tr>
+              <td><span style="font-weight:600;font-size:12px;color:var(--primary);"><%= p.no_tiket %></span></td>
+              <td><% if (p.pelanggan) { %><strong><%= p.pelanggan.nama %></strong><br><small style="color:var(--muted);"><%= p.pelanggan.no_pelanggan %></small><% } %></td>
+              <td><small><%= p.jenis_pengaduan.replace(/_/g,' ') %></small></td>
+              <td>
+                <% const pm = { darurat: 'danger', tinggi: 'warning', sedang: 'info', rendah: 'muted' }; %>
+                <span class="badge badge-<%= pm[p.prioritas] %>"><%= p.prioritas %></span>
+              </td>
+              <td><small><%= p.petugas ? p.petugas.nama : '-' %></small></td>
+              <td>
+                <% const sm = { baru: 'info', diverifikasi: 'purple', ditugaskan: 'warning', dalam_proses: 'warning', menunggu_pelanggan: 'muted', selesai: 'success', ditolak: 'danger', dibatalkan: 'muted' }; %>
+                <span class="badge badge-<%= sm[p.status] || 'muted' %>" style="font-size:10px;"><%= p.status.replace(/_/g,' ') %></span>
+              </td>
+              <td style="font-size:12px;color:var(--muted);"><%= formatTanggal(p.createdAt) %></td>
+              <td><a href="/pengaduan/<%= p.id %>" class="btn btn-secondary btn-xs">Detail</a></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

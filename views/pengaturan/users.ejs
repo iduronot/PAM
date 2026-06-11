@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Manajemen User' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Manajemen User</h1>
+      <div style="display:flex;gap:8px;">
+        <a href="/pengaturan/users/tambah" class="btn btn-primary">+ Tambah User</a>
+        <a href="/pengaturan" class="btn btn-secondary">Kembali</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% userList.forEach(u => { %>
+            <tr>
+              <td><strong><%= u.nama %></strong></td>
+              <td><%= u.username %></td>
+              <td><%= u.email || '-' %></td>
+              <td>
+                <% const rm = { super_admin: 'danger', admin_pam: 'warning', manajer: 'purple', kasir: 'info', petugas_meter: 'teal', pelanggan: 'muted' }; %>
+                <span class="badge badge-<%= rm[u.role] || 'muted' %>"><%= u.role.replace(/_/g,' ') %></span>
+              </td>
+              <td><span class="badge badge-<%= u.is_active ? 'success' : 'danger' %>"><%= u.is_active ? 'Aktif' : 'Nonaktif' %></span></td>
+              <td><a href="/pengaturan/users/<%= u.id %>/edit" class="btn btn-secondary btn-xs">Edit</a></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

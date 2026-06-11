@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Rute Baca Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header"><h1 class="page-title">Rute Baca Meter</h1><a href="/pengaturan" class="btn btn-secondary">Kembali</a></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Tambah Rute</span></div>
+        <form method="POST" action="/pengaturan/rute/tambah">
+          <div class="form-group"><label class="form-label">Nama Rute *</label><input type="text" name="nama_rute" class="form-control" required placeholder="Contoh: Rute A - Desa Sukamaju"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Urutan</label><input type="number" name="urutan" class="form-control" value="0" min="0"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Deskripsi</label><textarea name="deskripsi" class="form-control" rows="2" placeholder="Keterangan wilayah..."></textarea></div>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Daftar Rute</span></div>
+        <% if (ruteList.length === 0) { %><p style="color:var(--muted);font-size:13px;">Belum ada rute</p><% } %>
+        <% ruteList.forEach(r => { %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--sub-bg);border-radius:8px;margin-bottom:8px;">
+          <div><strong><%= r.nama_rute %></strong><small style="color:var(--muted);"> (urutan: <%= r.urutan %>)</small><% if (r.deskripsi) { %><br><small style="color:var(--muted);"><%= r.deskripsi %></small><% } %></div>
+          <% if (user.role === 'super_admin') { %>
+          <form method="POST" action="/pengaturan/rute/<%= r.id %>/hapus" onsubmit="return confirm('Hapus rute ini?')">
+            <button type="submit" class="btn btn-danger btn-xs">Hapus</button>
+          </form>
+          <% } %>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

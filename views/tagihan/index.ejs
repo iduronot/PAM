@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Manajemen Tagihan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Tagihan</h1>
+      <div style="display:flex;gap:8px;">
+        <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+        <a href="/tagihan/generate" class="btn btn-primary">Generate Tagihan</a>
+        <form method="POST" action="/tagihan/finalisasi" style="display:inline;">
+          <input type="hidden" name="periode_id" value="<%= periode_id || '' %>">
+          <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Finalisasi semua tagihan draft' + (<%= periode_id ? `' periode ini'` : `' semua periode'` %>) + '?')">Finalisasi Draft</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <form method="GET" class="search-bar">
+        <input name="q" class="search-input" placeholder="Cari nama atau no. pelanggan..." value="<%= q || '' %>">
+        <select name="status" class="form-control" style="width:auto;">
+          <option value="">Semua Status</option>
+          <option value="draft" <%=status==='draft'?'selected':''%>>Draft</option>
+          <option value="final" <%=status==='final'?'selected':''%>>Final (Belum Bayar)</option>
+          <option value="lunas" <%=status==='lunas'?'selected':''%>>Lunas</option>
+          <option value="terlambat" <%=status==='terlambat'?'selected':''%>>Terlambat</option>
+          <option value="dibatalkan" <%=status==='dibatalkan'?'selected':''%>>Dibatalkan</option>
+        </select>
+        <select name="periode_id" class="form-control" style="width:auto;">
+          <option value="">Semua Periode</option>
+          <% periodeList.forEach(p => { %>
+          <option value="<%= p.id %>" <%=periode_id==p.id?'selected':''%>><%= p.nama_periode %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="btn btn-primary">Cari</button>
+        <a href="/tagihan" class="btn btn-secondary">Reset</a>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Tagihan</th><th>Pelanggan</th><th>Periode</th><th>Pemakaian</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (tagihanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada tagihan</td></tr><% } %>
+            <% tagihanList.forEach(t => { %>
+            <tr>
+              <td><span style="font-weight:600;font-size:12px;"><%= t.no_tagihan %></span></td>
+              <td><% if (t.pelanggan) { %><a href="/pelanggan/<%= t.pelanggan_id %>" style="color:var(--primary);text-decoration:none;font-weight:600;"><%= t.pelanggan.nama %></a><br><small style="color:var(--muted);"><%= t.pelanggan.no_pelanggan %></small><% } %></td>
+              <td><% if (t.periode) { %><span class="badge badge-info"><%= t.periode.nama_periode %></span><% } %></td>
+              <td><%= t.pemakaian %> m³</td>
+              <td><strong><%= formatRupiah(t.total_tagihan) %></strong></td>
+              <td>
+                <% const jt = new Date(t.tanggal_jatuh_tempo); const now = new Date(); %>
+                <span style="<%= jt < now && t.status !== 'lunas' ? 'color:var(--danger);font-weight:600;' : '' %>"><%= formatTanggal(t.tanggal_jatuh_tempo) %></span>
+              </td>
+              <td>
+                <% const sm = { draft: 'muted', final: 'warning', lunas: 'success', terlambat: 'danger', dibatalkan: 'muted' }; %>
+                <span class="badge badge-<%= sm[t.status] %>"><%= t.status %></span>
+              </td>
+              <td style="white-space:nowrap;">
+                <a href="/tagihan/<%= t.id %>" class="btn btn-secondary btn-xs">Detail</a>
+                <% if (['final','terlambat'].includes(t.status) && ['super_admin','admin_pam','kasir'].includes(user.role)) { %>
+                <a href="/pembayaran/catat?tagihan_id=<%= t.id %>" class="btn btn-success btn-xs">Bayar</a>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="?page=<%= i %>&q=<%= q||'' %>&status=<%= status||'' %>&periode_id=<%= periode_id||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

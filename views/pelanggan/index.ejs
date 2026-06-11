@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Data Pelanggan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Data Pelanggan <span style="font-size:14px;color:var(--muted);font-weight:400;">(<%= count %> total)</span></h1>
+      <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+      <a href="/pelanggan/tambah" class="btn btn-primary">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        Tambah Pelanggan
+      </a>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <form method="GET" class="search-bar">
+        <input name="q" class="search-input" placeholder="Cari nama, no. pelanggan, sambungan, HP..." value="<%= q || '' %>">
+        <select name="status" class="form-control" style="width:auto;min-width:130px;">
+          <option value="">Semua Status</option>
+          <option value="aktif" <%=status==='aktif'?'selected':''%>>Aktif</option>
+          <option value="nonaktif" <%=status==='nonaktif'?'selected':''%>>Nonaktif</option>
+          <option value="putus_sementara" <%=status==='putus_sementara'?'selected':''%>>Putus Sementara</option>
+          <option value="putus_permanen" <%=status==='putus_permanen'?'selected':''%>>Putus Permanen</option>
+        </select>
+        <select name="kategori_id" class="form-control" style="width:auto;min-width:130px;">
+          <option value="">Semua Kategori</option>
+          <% kategoriList.forEach(k => { %>
+          <option value="<%= k.id %>" <%=kategori_id==k.id?'selected':''%>><%= k.nama %></option>
+          <% }) %>
+        </select>
+        <select name="rute_id" class="form-control" style="width:auto;min-width:120px;">
+          <option value="">Semua Rute</option>
+          <% ruteList.forEach(r => { %>
+          <option value="<%= r.id %>" <%=rute_id==r.id?'selected':''%>><%= r.nama_rute %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="btn btn-primary">Cari</button>
+        <a href="/pelanggan" class="btn btn-secondary">Reset</a>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No. Pelanggan</th>
+              <th>Nama</th>
+              <th>Alamat</th>
+              <th>No HP</th>
+              <th>Kategori</th>
+              <th>Rute</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (pelangganList.length === 0) { %>
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data pelanggan</td></tr>
+            <% } %>
+            <% pelangganList.forEach(p => { %>
+            <tr>
+              <td><span style="font-weight:600;color:var(--primary);"><%= p.no_pelanggan %></span><br><small style="color:var(--muted);"><%= p.no_sambungan %></small></td>
+              <td><strong><%= p.nama %></strong></td>
+              <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= p.alamat %></td>
+              <td><%= p.no_hp || '-' %></td>
+              <td><%= p.kategori ? p.kategori.nama : '-' %></td>
+              <td><%= p.rute ? p.rute.nama_rute : '-' %></td>
+              <td>
+                <% const statusMap = { aktif: 'success', nonaktif: 'muted', putus_sementara: 'warning', putus_permanen: 'danger' }; %>
+                <span class="badge badge-<%= statusMap[p.status] || 'muted' %>"><%= p.status.replace(/_/g,' ') %></span>
+              </td>
+              <td>
+                <a href="/pelanggan/<%= p.id %>" class="btn btn-secondary btn-xs">Detail</a>
+                <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                <a href="/pelanggan/<%= p.id %>/edit" class="btn btn-secondary btn-xs">Edit</a>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="?page=<%= i %>&q=<%= q||'' %>&status=<%= status||'' %>&kategori_id=<%= kategori_id||'' %>&rute_id=<%= rute_id||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

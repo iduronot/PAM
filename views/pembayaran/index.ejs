@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Pembayaran' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Riwayat Pembayaran</h1>
+      <a href="/pembayaran/catat" class="btn btn-primary">+ Catat Pembayaran</a>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <form method="GET" class="search-bar">
+        <input name="dari" type="date" class="form-control" style="width:auto;" value="<%= tanggal_dari || '' %>" placeholder="Dari tanggal">
+        <input name="sampai" type="date" class="form-control" style="width:auto;" value="<%= tanggal_sampai || '' %>" placeholder="Sampai tanggal">
+        <select name="metode" class="form-control" style="width:auto;">
+          <option value="">Semua Metode</option>
+          <option value="tunai" <%=metode==='tunai'?'selected':''%>>Tunai</option>
+          <option value="transfer" <%=metode==='transfer'?'selected':''%>>Transfer</option>
+          <option value="qris" <%=metode==='qris'?'selected':''%>>QRIS</option>
+          <option value="lainnya" <%=metode==='lainnya'?'selected':''%>>Lainnya</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="/pembayaran" class="btn btn-secondary">Reset</a>
+      </form>
+      <div style="font-size:13px;color:var(--success);font-weight:600;padding:8px 0;">Total: <%= formatRupiah(totalBayar) %> dari <%= count %> transaksi</div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Pembayaran</th><th>Pelanggan</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th><th>Kasir</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (pembayaranList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data pembayaran</td></tr><% } %>
+            <% pembayaranList.forEach(p => { %>
+            <tr>
+              <td><span style="font-size:12px;font-weight:600;"><%= p.no_pembayaran %></span></td>
+              <td><% if (p.pelanggan) { %><strong><%= p.pelanggan.nama %></strong><br><small style="color:var(--muted);"><%= p.pelanggan.no_pelanggan %></small><% } %></td>
+              <td><small><%= p.tagihan ? p.tagihan.no_tagihan : '-' %></small></td>
+              <td><%= formatTanggal(p.tanggal_bayar) %></td>
+              <td><strong style="color:var(--success);"><%= formatRupiah(p.jumlah_bayar) %></strong></td>
+              <td><span class="badge badge-info"><%= p.metode %></span></td>
+              <td style="font-size:12px;color:var(--muted);"><%= p.kasir ? p.kasir.nama : '-' %></td>
+              <td><a href="/pembayaran/<%= p.id %>/bukti" class="btn btn-secondary btn-xs">Bukti</a></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="?page=<%= i %>&dari=<%= tanggal_dari||'' %>&sampai=<%= tanggal_sampai||'' %>&metode=<%= metode||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

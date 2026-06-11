@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Tagihan Saya' }) %>
+  <div class="content">
+    <div class="page-header"><h1 class="page-title">Tagihan Saya</h1><a href="/pelanggan-portal" class="btn btn-secondary">Kembali</a></div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Tagihan</th><th>Periode</th><th>Pemakaian</th><th>Total</th><th>Jatuh Tempo</th><th>Status</th></tr></thead>
+          <tbody>
+            <% if (tagihanList.length === 0) { %><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Belum ada tagihan</td></tr><% } %>
+            <% tagihanList.forEach(t => { %>
+            <tr>
+              <td><small style="font-weight:600;"><%= t.no_tagihan %></small></td>
+              <td><%= t.periode ? t.periode.nama_periode : '-' %></td>
+              <td><%= t.pemakaian %> m³</td>
+              <td><strong><%= formatRupiah(t.total_tagihan) %></strong></td>
+              <td><%= formatTanggal(t.tanggal_jatuh_tempo) %></td>
+              <td><span class="badge badge-<%= t.status==='lunas'?'success':t.status==='terlambat'?'danger':'warning' %>"><%= t.status %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

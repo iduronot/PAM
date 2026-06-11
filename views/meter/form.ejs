@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: mode === 'tambah' ? 'Tambah Meter' : 'Edit Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= mode === 'tambah' ? 'Tambah Meter Baru' : 'Edit Data Meter' %></h1>
+      <a href="/meter" class="btn btn-secondary">Kembali</a>
+    </div>
+    <div class="card" style="max-width:600px;">
+      <form method="POST" action="/meter/<%= mode === 'edit' ? meter.id + '/edit' : 'tambah' %>" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Pelanggan *</label>
+          <select name="pelanggan_id" class="form-control" required>
+            <option value="">-- Pilih Pelanggan --</option>
+            <% pelangganList.forEach(p => { %>
+            <option value="<%= p.id %>" <%= (meter.pelanggan_id == p.id || pelangkan_id == p.id) ? 'selected' : '' %>><%= p.no_pelanggan %> - <%= p.nama %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nomor Meter *</label>
+            <input type="text" name="no_meter" class="form-control" value="<%= meter.no_meter || '' %>" required placeholder="Contoh: M001234">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Pasang</label>
+            <input type="date" name="tanggal_pasang" class="form-control" value="<%= meter.tanggal_pasang ? meter.tanggal_pasang.toString().slice(0,10) : '' %>">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Merk/Tipe</label>
+            <input type="text" name="merk" class="form-control" value="<%= meter.merk || '' %>" placeholder="Contoh: Itron">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Diameter</label>
+            <input type="text" name="diameter" class="form-control" value="<%= meter.diameter || '' %>" placeholder="Contoh: 1/2 inch">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Angka Awal Meter (m³)</label>
+            <input type="number" name="angka_awal" class="form-control" value="<%= meter.angka_awal || 0 %>" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+              <option value="aktif" <%=meter.status==='aktif'?'selected':''%>>Aktif</option>
+              <option value="rusak" <%=meter.status==='rusak'?'selected':''%>>Rusak</option>
+              <option value="diganti" <%=meter.status==='diganti'?'selected':''%>>Diganti</option>
+              <option value="dicabut" <%=meter.status==='dicabut'?'selected':''%>>Dicabut</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Foto Meter (opsional)</label>
+          <input type="file" name="foto_awal" class="form-control" accept="image/*">
+          <% if (meter.foto_awal) { %><img src="<%= meter.foto_awal %>" style="width:120px;margin-top:8px;border-radius:6px;"><% } %>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catatan Teknis</label>
+          <textarea name="catatan_teknis" class="form-control" rows="2" placeholder="Catatan pemasangan, kondisi, dsb..."><%= meter.catatan_teknis || '' %></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+          <a href="/meter" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

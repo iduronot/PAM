@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Catat Pembayaran' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Catat Pembayaran</h1>
+      <a href="/pembayaran" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <!-- Cari Tagihan -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Cari Tagihan</span></div>
+      <form method="GET" class="search-bar">
+        <input name="q" class="search-input" placeholder="Cari nama, no. pelanggan, sambungan, no HP..." value="<%= q || '' %>" autofocus>
+        <button type="submit" class="btn btn-primary">Cari</button>
+      </form>
+
+      <% if (tagihanList.length > 0) { %>
+      <div style="margin-top:12px;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>No. Tagihan</th><th>Pelanggan</th><th>Periode</th><th>Total</th><th>Jatuh Tempo</th><th></th></tr></thead>
+            <tbody>
+              <% tagihanList.forEach(t => { %>
+              <tr>
+                <td><%= t.no_tagihan %></td>
+                <td><strong><%= t.pelanggan ? t.pelanggan.nama : '' %></strong><br><small style="color:var(--muted);"><%= t.pelanggan ? t.pelanggan.no_pelanggan : '' %></small></td>
+                <td><%= t.periode ? t.periode.nama_periode : '' %></td>
+                <td><strong style="color:var(--warning);"><%= formatRupiah(t.total_tagihan) %></strong></td>
+                <td><%= formatTanggal(t.tanggal_jatuh_tempo) %></td>
+                <td><a href="/pembayaran/catat?tagihan_id=<%= t.id %>" class="btn btn-success btn-sm">Pilih</a></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Form Bayar jika tagihan sudah dipilih -->
+    <% if (tagihanDipilih) { %>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Form Pembayaran</span></div>
+      <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Pelanggan</div>
+        <div style="font-size:18px;font-weight:700;"><%= tagihanDipilih.pelanggan ? tagihanDipilih.pelanggan.nama : '' %></div>
+        <div style="font-size:12px;color:var(--muted);"><%= tagihanDipilih.no_tagihan %> &bull; Jatuh tempo: <%= formatTanggal(tagihanDipilih.tanggal_jatuh_tempo) %></div>
+        <div style="font-size:28px;font-weight:800;color:var(--success);margin-top:8px;"><%= formatRupiah(tagihanDipilih.total_tagihan) %></div>
+      </div>
+      <form method="POST" action="/pembayaran/catat" enctype="multipart/form-data" style="max-width:400px;">
+        <input type="hidden" name="tagihan_id" value="<%= tagihanDipilih.id %>">
+        <div class="form-group">
+          <label class="form-label">Metode Pembayaran</label>
+          <select name="metode" class="form-control">
+            <option value="tunai">Tunai</option>
+            <option value="transfer">Transfer Bank</option>
+            <option value="qris">QRIS</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bukti Pembayaran (opsional)</label>
+          <input type="file" name="bukti_pembayaran" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catatan</label>
+          <input type="text" name="catatan" class="form-control" placeholder="Catatan tambahan (opsional)">
+        </div>
+        <button type="submit" class="btn btn-success" style="width:100%;padding:14px;font-size:15px;">
+          Konfirmasi Pembayaran <%= formatRupiah(tagihanDipilih.total_tagihan) %>
+        </button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

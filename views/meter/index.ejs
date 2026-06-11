@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Manajemen Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Data Meter</h1>
+      <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+      <a href="/meter/tambah" class="btn btn-primary">+ Tambah Meter</a>
+      <% } %>
+    </div>
+    <div class="card">
+      <form method="GET" class="search-bar">
+        <input name="q" class="search-input" placeholder="Cari no. meter atau nama pelanggan..." value="<%= q || '' %>">
+        <select name="status" class="form-control" style="width:auto;">
+          <option value="">Semua Status</option>
+          <option value="aktif" <%=status==='aktif'?'selected':''%>>Aktif</option>
+          <option value="rusak" <%=status==='rusak'?'selected':''%>>Rusak</option>
+          <option value="diganti" <%=status==='diganti'?'selected':''%>>Diganti</option>
+          <option value="dicabut" <%=status==='dicabut'?'selected':''%>>Dicabut</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Cari</button>
+        <a href="/meter" class="btn btn-secondary">Reset</a>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Meter</th><th>Pelanggan</th><th>Dipasang</th><th>Merk/Tipe</th><th>Angka Awal</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (meterList.length === 0) { %><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data meter</td></tr><% } %>
+            <% meterList.forEach(m => { %>
+            <tr>
+              <td><strong><%= m.no_meter %></strong></td>
+              <td><% if (m.pelanggan) { %><a href="/pelanggan/<%= m.pelanggan_id %>" style="color:var(--primary);text-decoration:none;"><%= m.pelanggan.nama %></a><br><small style="color:var(--muted);"><%= m.pelanggan.no_pelanggan %></small><% } else { %>-<% } %></td>
+              <td><%= formatTanggal(m.tanggal_pasang) %></td>
+              <td><%= m.merk || '-' %> <%= m.diameter ? `(${m.diameter})` : '' %></td>
+              <td><%= m.angka_awal || 0 %> m³</td>
+              <td>
+                <% const sm = { aktif: 'success', rusak: 'danger', diganti: 'warning', dicabut: 'muted' }; %>
+                <span class="badge badge-<%= sm[m.status] %>"><%= m.status %></span>
+              </td>
+              <td>
+                <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                <a href="/meter/<%= m.id %>/edit" class="btn btn-secondary btn-xs">Edit</a>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

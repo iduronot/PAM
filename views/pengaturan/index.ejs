@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Pengaturan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <h1 class="page-title">Pengaturan Sistem</h1>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+      <% const items = [
+        { title: 'Manajemen User', desc: 'Kelola akun pengguna dan role akses', icon: '👤', href: '/pengaturan/users', color: 'blue' },
+        { title: 'Kategori Pelanggan', desc: 'Atur kategori/golongan pelanggan', icon: '🏷️', href: '/pengaturan/kategori', color: 'purple' },
+        { title: 'Rute Baca Meter', desc: 'Kelola rute dan wilayah pembacaan', icon: '🗺️', href: '/pengaturan/rute', color: 'teal' },
+        { title: 'Audit Log', desc: 'Riwayat aktivitas pengguna', icon: '📜', href: '/pengaturan/audit', color: 'orange' },
+      ]; %>
+      <% items.forEach(item => { %>
+      <a href="<%= item.href %>" class="stat-card <%= item.color %>" style="text-decoration:none;display:block;">
+        <div style="font-size:28px;margin-bottom:8px;"><%= item.icon %></div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;"><%= item.title %></div>
+        <div style="font-size:12px;color:var(--muted);"><%= item.desc %></div>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

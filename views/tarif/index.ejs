@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Manajemen Tarif' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Struktur Tarif Air</h1>
+      <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+      <a href="/tarif/tambah" class="btn btn-primary">+ Tambah Tarif</a>
+      <% } %>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama Tarif</th><th>Kategori</th><th>Harga/m³</th><th>Biaya Admin</th><th>Min. Bayar</th><th>Min. m³</th><th>Denda (%)</th><th>Berlaku</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (tarifList.length === 0) { %><tr><td colspan="10" style="text-align:center;color:var(--muted);padding:32px;">Belum ada tarif. <a href="/tarif/tambah" style="color:var(--primary);">Tambah sekarang</a></td></tr><% } %>
+            <% tarifList.forEach(t => { %>
+            <tr>
+              <td><strong><%= t.nama_tarif %></strong></td>
+              <td><%= t.kategori ? t.kategori.nama : 'Semua' %></td>
+              <td><%= formatRupiah(t.harga_per_m3) %></td>
+              <td><%= formatRupiah(t.biaya_admin) %></td>
+              <td><%= formatRupiah(t.biaya_minimum) %></td>
+              <td><%= t.minimum_m3 %> m³</td>
+              <td><%= t.denda_persen %>%</td>
+              <td><%= formatTanggal(t.tanggal_berlaku) %></td>
+              <td><span class="badge badge-<%= t.is_active ? 'success' : 'muted' %>"><%= t.is_active ? 'Aktif' : 'Nonaktif' %></span></td>
+              <td style="white-space:nowrap;">
+                <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                <a href="/tarif/<%= t.id %>/edit" class="btn btn-secondary btn-xs">Edit</a>
+                <form method="POST" action="/tarif/<%= t.id %>/toggle" style="display:inline;">
+                  <button type="submit" class="btn btn-<%= t.is_active ? 'danger' : 'success' %> btn-xs"><%= t.is_active ? 'Nonaktifkan' : 'Aktifkan' %></button>
+                </form>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

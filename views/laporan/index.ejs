@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Laporan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <h1 class="page-title">Laporan & Export</h1>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+      <% const laporanItems = [
+        { title: 'Laporan Tunggakan', desc: 'Daftar pelanggan dengan tagihan belum lunas', icon: '⚠️', href: '/laporan/tunggakan', color: 'red' },
+        { title: 'Laporan Pembayaran', desc: 'Rekap seluruh pembayaran yang diterima', icon: '💰', href: '/laporan/pembayaran', color: 'green' },
+        { title: 'Laporan Tagihan', desc: 'Daftar tagihan per periode', icon: '📋', href: '/laporan/tagihan', color: 'blue' },
+        { title: 'Laporan Pelanggan', desc: 'Data seluruh pelanggan terdaftar', icon: '👥', href: '/laporan/pelanggan', color: 'purple' },
+      ]; %>
+      <% laporanItems.forEach(item => { %>
+      <a href="<%= item.href %>" class="stat-card <%= item.color %>" style="text-decoration:none;display:block;transition:transform .2s;">
+        <div style="font-size:28px;margin-bottom:8px;"><%= item.icon %></div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;"><%= item.title %></div>
+        <div style="font-size:12px;color:var(--muted);"><%= item.desc %></div>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

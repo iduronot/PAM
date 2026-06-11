@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Laporan Pelanggan' }) %>
+  <div class="content">
+    <div class="page-header">
+      <h1 class="page-title">Laporan Data Pelanggan (<%= pelangganList.length %>)</h1>
+      <div style="display:flex;gap:8px;">
+        <a href="/laporan/pelanggan?export=excel" class="btn btn-success btn-sm">⬇ Export Excel</a>
+        <a href="/laporan" class="btn btn-secondary btn-sm">Kembali</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Pelanggan</th><th>No. Sambungan</th><th>Nama</th><th>Alamat</th><th>No HP</th><th>Kategori</th><th>Rute</th><th>Status</th></tr></thead>
+          <tbody>
+            <% if (pelangganList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
+            <% pelangganList.forEach(p => { %>
+            <tr>
+              <td><strong><%= p.no_pelanggan %></strong></td>
+              <td><%= p.no_sambungan %></td>
+              <td><%= p.nama %></td>
+              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= p.alamat %></td>
+              <td><%= p.no_hp || '-' %></td>
+              <td><%= p.kategori ? p.kategori.nama : '-' %></td>
+              <td><%= p.rute ? p.rute.nama_rute : '-' %></td>
+              <td><span class="badge badge-<%= p.status==='aktif'?'success':'muted' %>"><%= p.status %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

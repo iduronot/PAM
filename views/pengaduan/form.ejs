@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Buat Pengaduan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header"><h1 class="page-title">Buat Pengaduan Baru</h1><a href="/pengaduan" class="btn btn-secondary">Kembali</a></div>
+    <div class="card" style="max-width:560px;">
+      <form method="POST" action="/pengaduan/buat" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Pelanggan *</label>
+          <select name="pelanggan_id" class="form-control" required>
+            <option value="">-- Pilih Pelanggan --</option>
+            <% pelangganList.forEach(p => { %>
+            <option value="<%= p.id %>"><%= p.no_pelanggan %> — <%= p.nama %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jenis Pengaduan *</label>
+            <select name="jenis_pengaduan" class="form-control" required>
+              <option value="air_tidak_mengalir">Air Tidak Mengalir</option>
+              <option value="air_keruh">Air Keruh</option>
+              <option value="meter_rusak">Meter Rusak</option>
+              <option value="kebocoran_pipa">Kebocoran Pipa</option>
+              <option value="tagihan_tidak_sesuai">Tagihan Tidak Sesuai</option>
+              <option value="sambungan_bermasalah">Sambungan Bermasalah</option>
+              <option value="pasang_baru">Pasang Baru</option>
+              <option value="tutup_sementara">Tutup Sementara</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prioritas</label>
+            <select name="prioritas" class="form-control">
+              <option value="rendah">Rendah</option>
+              <option value="sedang" selected>Sedang</option>
+              <option value="tinggi">Tinggi</option>
+              <option value="darurat">Darurat</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi Masalah *</label>
+          <textarea name="deskripsi" class="form-control" rows="3" required placeholder="Jelaskan masalah secara detail..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Foto Kondisi (opsional)</label>
+          <input type="file" name="foto_sebelum" class="form-control" accept="image/*">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary">Simpan Pengaduan</button>
+          <a href="/pengaduan" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

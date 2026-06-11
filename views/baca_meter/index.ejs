@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Baca Meter' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Periode Baca Meter</h1>
+      <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+      <a href="/baca-meter/periode/buat" class="btn btn-primary">+ Buat Periode Baru</a>
+      <% } %>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Periode</th><th>Bln/Thn</th><th>Tgl Mulai</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% if (periodeList.length === 0) { %><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Belum ada periode. <a href="/baca-meter/periode/buat" style="color:var(--primary);">Buat sekarang</a></td></tr><% } %>
+            <% periodeList.forEach(p => { %>
+            <tr>
+              <td><strong><%= p.nama_periode %></strong></td>
+              <td><%= p.bulan %>/<%= p.tahun %></td>
+              <td><%= formatTanggal(p.tanggal_mulai) %></td>
+              <td><%= formatTanggal(p.tanggal_jatuh_tempo) %></td>
+              <td>
+                <% const sm = { buka: 'success', tutup: 'warning', selesai: 'muted' }; %>
+                <span class="badge badge-<%= sm[p.status] %>"><%= p.status %></span>
+              </td>
+              <td style="display:flex;gap:6px;align-items:center;">
+                <a href="/baca-meter/periode/<%= p.id %>" class="btn btn-primary btn-xs">Detail / Input</a>
+                <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                <form method="POST" action="/baca-meter/periode/<%= p.id %>/hapus" onsubmit="return confirm('Hapus periode <%= p.nama_periode %>? Semua data baca meter periode ini akan ikut terhapus.')">
+                  <button type="submit" class="btn btn-xs" style="background:var(--danger,#ef4444);color:#fff;border:none;">Hapus</button>
+                </form>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

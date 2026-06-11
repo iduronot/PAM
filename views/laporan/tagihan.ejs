@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Laporan Tagihan' }) %>
+  <div class="content">
+    <div class="page-header">
+      <h1 class="page-title">Laporan Tagihan</h1>
+      <div style="display:flex;gap:8px;">
+        <a href="/laporan/tagihan?periode_id=<%= periode_id||'' %>&export=excel" class="btn btn-success btn-sm">⬇ Export Excel</a>
+        <a href="/laporan" class="btn btn-secondary btn-sm">Kembali</a>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <form method="GET" class="search-bar">
+        <select name="periode_id" class="form-control" style="width:auto;">
+          <option value="">Semua Periode</option>
+          <% periodeList.forEach(p => { %>
+          <option value="<%= p.id %>" <%=periode_id==p.id?'selected':''%>><%= p.nama_periode %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <span style="font-size:12px;color:var(--muted);margin-left:8px;">Total: <strong style="color:var(--text)"><%= formatRupiah(summary.total) %></strong> &bull; Lunas: <strong style="color:var(--success)"><%= formatRupiah(summary.lunas) %></strong> &bull; Belum: <strong style="color:var(--warning)"><%= formatRupiah(summary.belum) %></strong></span>
+      </form>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No. Tagihan</th><th>No. Pelanggan</th><th>Nama</th><th>Periode</th><th>Pemakaian</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            <% if (tagihanList.length === 0) { %><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
+            <% tagihanList.forEach(t => { %>
+            <tr>
+              <td><small><%= t.no_tagihan %></small></td>
+              <td><%= t.pelanggan ? t.pelanggan.no_pelanggan : '-' %></td>
+              <td><strong><%= t.pelanggan ? t.pelanggan.nama : '-' %></strong></td>
+              <td><small><%= t.periode ? t.periode.nama_periode : '-' %></small></td>
+              <td><%= t.pemakaian %> m³</td>
+              <td><strong><%= formatRupiah(t.total_tagihan) %></strong></td>
+              <td><span class="badge badge-<%= t.status==='lunas'?'success':t.status==='terlambat'?'danger':t.status==='final'?'warning':'muted' %>"><%= t.status %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
