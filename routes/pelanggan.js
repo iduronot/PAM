@@ -41,7 +41,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer',
 
   res.render('pelanggan/index', {
     currentPage: 'pelanggan',
-    pelangganList: rows, count, totalPages, page: parseInt(page),
+    pelangganList: rows, count, totalPages, page: parseInt(page), limit,
     kategoriList, ruteList, q, status, kategori_id, rute_id,
   });
 });
@@ -61,8 +61,36 @@ router.post('/tambah', requireLogin, requireRole('super_admin', 'admin_pam'), as
   try {
     const lastPelanggan = await Pelanggan.findOne({ order: [['id', 'DESC']] });
     const no_pelanggan = generateNoPelanggan(lastPelanggan ? lastPelanggan.id : 0);
-    const pelanggan = await Pelanggan.create({ ...req.body, no_pelanggan });
+
+    // Auto-generate no_sambungan dengan prefix GT
+    const lastSambungan = await Pelanggan.findOne({
+      where: { no_sambungan: { [Op.like]: 'GT%' } },
+      order: [['id', 'DESC']],
+    });
+    const sambunganNum = lastSambungan ? (parseInt((lastSambungan.no_sambungan || '').replace(/\D/g, '')) || 0) : 0;
+    const no_sambungan = 'GT' + String(sambunganNum + 1).padStart(4, '0');
+
+    const pelanggan = await Pelanggan.create({ ...req.body, no_pelanggan, no_sambungan });
     await log(req.session.user.id, 'CREATE', 'pelanggan', pelanggan.id, null, pelanggan.toJSON(), req.ip, `Tambah pelanggan ${pelanggan.nama}`);
+
+    // Buat meter awal jika checkbox pasang_meter dicentang
+    if (req.body.pasang_meter === '1') {
+      const lastMeter = await Meter.findOne({
+        where: { no_meter: { [Op.like]: 'GT%' } },
+        order: [['id', 'DESC']],
+      });
+      const meterNum = lastMeter ? (parseInt((lastMeter.no_meter || '').replace(/\D/g, '')) || 0) : 0;
+      const no_meter_auto = 'GT' + String(meterNum + 1).padStart(4, '0');
+      await Meter.create({
+        pelanggan_id: pelanggan.id,
+        no_meter: no_meter_auto,
+        angka_awal: parseFloat(req.body.meter_angka_awal) || 0,
+        tanggal_pasang: req.body.meter_tanggal_pasang || null,
+        merk: req.body.meter_merk || null,
+        diameter: req.body.meter_diameter || null,
+        status: 'aktif',
+      });
+    }
 
     // Buat akun user pelanggan jika diminta
     if (req.body.buat_akun === '1' && req.body.username_akun) {

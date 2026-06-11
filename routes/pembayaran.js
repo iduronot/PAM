@@ -43,7 +43,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'kasir', '
 
   res.render('pembayaran/index', {
     currentPage: 'pembayaran',
-    pembayaranList: rows, count, totalPages, page: parseInt(page),
+    pembayaranList: rows, count, totalPages, page: parseInt(page), limit,
     totalBayar, q, tanggal_dari, tanggal_sampai, metode,
   });
 });

@@ -43,11 +43,12 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Tagihan</th><th>Pelanggan</th><th>Periode</th><th>Pemakaian</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Tagihan</th><th>Pelanggan</th><th>Periode</th><th>Pemakaian</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody>
             <% if (tagihanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada tagihan</td></tr><% } %>
-            <% tagihanList.forEach(t => { %>
+            <% tagihanList.forEach((t, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><span style="font-weight:600;font-size:12px;"><%= t.no_tagihan %></span></td>
               <td><% if (t.pelanggan) { %><a href="/pelanggan/<%= t.pelanggan_id %>" style="color:var(--primary);text-decoration:none;font-weight:600;"><%= t.pelanggan.nama %></a><br><small style="color:var(--muted);"><%= t.pelanggan.no_pelanggan %></small><% } %></td>
               <td><% if (t.periode) { %><span class="badge badge-info"><%= t.periode.nama_periode %></span><% } %></td>

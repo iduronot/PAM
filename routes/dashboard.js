@@ -1,29 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const { requireLogin, requireNotPelanggan } = require('../middleware/auth');
-const { Pelanggan, Tagihan, Pembayaran, Pengaduan, PencatatanMeter, PeriodeBaca } = require('../models');
+const { Pelanggan, Tagihan, Pembayaran, Pengaduan, PencatatanMeter, PeriodeBaca, Pengeluaran } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 
 router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
   try {
     const now = new Date();
-    const bulanIni = now.getMonth() + 1;
-    const tahunIni = now.getFullYear();
+    const bulanIni = parseInt(req.query.bulan) || now.getMonth() + 1;
+    const tahunIni = parseInt(req.query.tahun) || now.getFullYear();
+
+    const awalBulan = new Date(tahunIni, bulanIni - 1, 1);
+    const awalBulanDepan = new Date(tahunIni, bulanIni, 1);
 
     const [
       totalPelangganAktif, totalPelangganNonaktif,
       periodeAktif,
       totalTagihanBulanIni, totalLunasBulanIni,
       pengaduanBaru, pengaduanBelumSelesai,
+      pemasukanBulanIni, pengeluaranBulanIni,
+      pemasukanTotal, pengeluaranTotal,
     ] = await Promise.all([
       Pelanggan.count({ where: { status: 'aktif' } }),
       Pelanggan.count({ where: { status: { [Op.in]: ['nonaktif', 'putus_sementara', 'putus_permanen'] } } }),
       PeriodeBaca.findOne({ where: { bulan: bulanIni, tahun: tahunIni } }),
-      Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: new Date(tahunIni, bulanIni - 1, 1) } } }),
-      Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: new Date(tahunIni, bulanIni - 1, 1) } } }),
+      Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } } }),
+      Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } } }),
       Pengaduan.count({ where: { status: 'baru' } }),
       Pengaduan.count({ where: { status: { [Op.notIn]: ['selesai', 'ditolak', 'dibatalkan'] } } }),
+      Pembayaran.sum('jumlah_bayar', { where: { tanggal_bayar: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } } }),
+      Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalBulan.toISOString().slice(0,10), [Op.lt]: awalBulanDepan.toISOString().slice(0,10) } } }),
+      Pembayaran.sum('jumlah_bayar'),
+      Pengeluaran.sum('jumlah'),
     ]);
 
     const totalTunggakan = await Tagihan.sum('total_tagihan', {
@@ -44,27 +53,27 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       progressBaca = { total: totalBaca, terbaca: sudahBaca, belum: totalBaca - sudahBaca };
     }
 
-    // Tagihan 6 bulan terakhir (untuk chart)
+    // Tagihan 6 bulan terakhir dari bulan yang dipilih (untuk chart)
     const chartData = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(tahunIni, bulanIni - 1 - i, 1);
       const bln = d.getMonth() + 1;
       const thn = d.getFullYear();
-      const total = await Tagihan.sum('total_tagihan', {
-        where: {
-          status: { [Op.in]: ['final', 'lunas', 'terlambat'] },
-          createdAt: { [Op.gte]: new Date(thn, bln - 1, 1), [Op.lt]: new Date(thn, bln, 1) }
-        }
-      }) || 0;
-      const lunas = await Tagihan.sum('total_tagihan', {
-        where: {
-          status: 'lunas',
-          createdAt: { [Op.gte]: new Date(thn, bln - 1, 1), [Op.lt]: new Date(thn, bln, 1) }
-        }
-      }) || 0;
+      const awal = new Date(thn, bln - 1, 1);
+      const akhir = new Date(thn, bln, 1);
+      const awalStr = awal.toISOString().slice(0, 10);
+      const akhirStr = akhir.toISOString().slice(0, 10);
+      const [total, lunas, keluar] = await Promise.all([
+        Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+        Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+        Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } } }),
+      ]);
       const namaBln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][bln - 1];
-      chartData.push({ label: `${namaBln} ${thn}`, total, lunas });
+      chartData.push({ label: `${namaBln} ${thn}`, total: total || 0, lunas: lunas || 0, keluar: keluar || 0 });
     }
+
+    const saldoTotal = (pemasukanTotal || 0) - (pengeluaranTotal || 0);
+    const saldoBulanIni = (pemasukanBulanIni || 0) - (pengeluaranBulanIni || 0);
 
     res.render('dashboard/index', {
       currentPage: 'dashboard',
@@ -74,9 +83,16 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       totalTunggakan: totalTunggakan || 0,
       pelangganMenunggak,
       pengaduanBaru, pengaduanBelumSelesai,
+      pemasukanBulanIni: pemasukanBulanIni || 0,
+      pengeluaranBulanIni: pengeluaranBulanIni || 0,
+      saldoBulanIni,
+      pemasukanTotal: pemasukanTotal || 0,
+      pengeluaranTotal: pengeluaranTotal || 0,
+      saldoTotal,
       progressBaca, periodeAktif,
       chartData: JSON.stringify(chartData),
-      bulanIni, tahunIni,
+      bulanFilter: bulanIni, tahunFilter: tahunIni,
+      bulanIni: now.getMonth() + 1, tahunIni: now.getFullYear(),
     });
   } catch (e) {
     console.error(e);

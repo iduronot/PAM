@@ -14,16 +14,17 @@
       </div>
     </div>
     <div class="card" style="margin-bottom:12px;padding:12px 20px;">
-      <strong>Total Tunggakan: <span style="color:var(--danger)"><%= formatRupiah(total) %></span></strong> dari <%= tagihanList.length %> tagihan
+      <strong>Total Tunggakan: <span style="color:var(--danger)"><%= formatRupiah(total) %></span></strong> dari <%= count %> tagihan
     </div>
     <div class="card">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Periode</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Periode</th><th>Total Tagihan</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody>
             <% if (tagihanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada tunggakan</td></tr><% } %>
-            <% tagihanList.forEach(t => { %>
+            <% tagihanList.forEach((t, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><%= t.pelanggan ? t.pelanggan.no_pelanggan : '-' %></td>
               <td><strong><%= t.pelanggan ? t.pelanggan.nama : '-' %></strong></td>
               <td><small><%= t.no_tagihan %></small></td>
@@ -37,6 +38,13 @@
           </tbody>
         </table>
       </div>
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&kategori_id=<%= kategori_id||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
     </div>
   </div>
 </div>

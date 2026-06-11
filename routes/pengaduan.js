@@ -20,17 +20,30 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }).fields
 const adminRoles = ['super_admin', 'admin_pam', 'manajer'];
 
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer', 'petugas_meter', 'kasir'), async (req, res) => {
-  const { status, prioritas, jenis, page = 1 } = req.query;
+  const { status, prioritas, jenis, q, page = 1 } = req.query;
   const limit = 25;
   const offset = (page - 1) * limit;
   const where = {};
   if (status) where.status = status;
   if (prioritas) where.prioritas = prioritas;
   if (jenis) where.jenis_pengaduan = jenis;
+  if (q) where.no_tiket = { [Op.like]: `%${q}%` };
 
   // Petugas hanya lihat yang ditugaskan ke mereka
   if (req.session.user.role === 'petugas_meter') {
     where.petugas_id = req.session.user.id;
+  }
+
+  // Cari berdasarkan nama pelanggan jika ada q
+  let pelangganIds = [];
+  if (q) {
+    const found = await Pelanggan.findAll({
+      where: { [Op.or]: [{ nama: { [Op.like]: `%${q}%` } }, { no_pelanggan: { [Op.like]: `%${q}%` } }] },
+      attributes: ['id'],
+    });
+    pelangganIds = found.map(p => p.id);
+    where[Op.or] = [{ no_tiket: { [Op.like]: `%${q}%` } }, ...(pelangganIds.length ? [{ pelanggan_id: { [Op.in]: pelangganIds } }] : [])];
+    delete where.no_tiket;
   }
 
   const { count, rows } = await Pengaduan.findAndCountAll({
@@ -45,8 +58,8 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer',
   res.render('pengaduan/index', {
     currentPage: 'pengaduan',
     pengaduanList: rows, count,
-    totalPages: Math.ceil(count / limit), page: parseInt(page),
-    status, prioritas, jenis,
+    totalPages: Math.ceil(count / limit), page: parseInt(page), limit,
+    status, prioritas, jenis, q,
   });
 });
 

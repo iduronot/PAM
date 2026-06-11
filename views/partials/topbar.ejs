@@ -7,10 +7,30 @@
     <button class="theme-btn" onclick="toggleTheme()" title="Ganti tema">
       <span id="themeIcon">🌙</span>
     </button>
-    <a href="/pengaturan/users/<%= user && user.id %>/edit" class="avatar" title="<%= user && user.nama %>">
-      <%= user && user.nama ? user.nama.charAt(0).toUpperCase() : 'U' %>
-    </a>
-    <span style="font-size:12px;color:var(--muted);"><%= user && user.nama %></span>
+    <!-- User dropdown -->
+    <div style="position:relative;" id="userDropdownWrap">
+      <button onclick="toggleUserDropdown()" style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:8px;transition:background .2s;" onmouseenter="this.style.background='var(--hover-bg)'" onmouseleave="this.style.background='none'">
+        <div class="avatar">
+          <%= user && user.nama ? user.nama.charAt(0).toUpperCase() : 'U' %>
+        </div>
+        <span style="font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= user && user.nama %></span>
+        <svg width="12" height="12" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div id="userDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--modal-bg);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:1200;overflow:hidden;">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:600;"><%= user && user.nama %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;"><%= user && user.role && user.role.replace(/_/g,' ') %></div>
+        </div>
+        <a href="/akun/ganti-password" style="display:flex;align-items:center;gap:8px;padding:10px 14px;color:var(--text);text-decoration:none;font-size:13px;transition:background .15s;" onmouseenter="this.style.background='var(--hover-bg)'" onmouseleave="this.style.background='none'">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Ganti Password
+        </a>
+        <a href="/logout" style="display:flex;align-items:center;gap:8px;padding:10px 14px;color:var(--danger);text-decoration:none;font-size:13px;transition:background .15s;border-top:1px solid var(--border);" onmouseenter="this.style.background='var(--hover-bg)'" onmouseleave="this.style.background='none'">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Keluar
+        </a>
+      </div>
+    </div>
   </div>
 </header>
 <script>
@@ -27,6 +47,15 @@
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
+  function toggleUserDropdown() {
+    const dd = document.getElementById('userDropdown');
+    dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+  }
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('userDropdownWrap').contains(e.target)) {
+      document.getElementById('userDropdown').style.display = 'none';
+    }
+  });
   document.addEventListener('DOMContentLoaded', () => {
     const t = localStorage.getItem('pam_theme') || 'dark';
     document.getElementById('themeIcon').textContent = t === 'light' ? '☀️' : '🌙';

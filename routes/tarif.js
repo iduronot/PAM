@@ -5,11 +5,20 @@ const { Tarif, KategoriPelanggan } = require('../models');
 const { log } = require('../helpers/audit');
 
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer'), async (req, res) => {
-  const tarifList = await Tarif.findAll({
+  const { q, is_active, page = 1 } = req.query;
+  const { Op } = require('sequelize');
+  const limit = 20;
+  const offset = (parseInt(page) - 1) * limit;
+  const where = {};
+  if (q) where.nama_tarif = { [Op.like]: `%${q}%` };
+  if (is_active !== undefined && is_active !== '') where.is_active = is_active === '1';
+  const { count, rows } = await Tarif.findAndCountAll({
+    where,
     include: [{ model: KategoriPelanggan, as: 'kategori' }],
     order: [['is_active', 'DESC'], ['nama_tarif', 'ASC']],
+    limit, offset,
   });
-  res.render('tarif/index', { currentPage: 'tarif', tarifList });
+  res.render('tarif/index', { currentPage: 'tarif', tarifList: rows, count, totalPages: Math.ceil(count / limit), page: parseInt(page), limit, q, is_active });
 });
 
 router.get('/tambah', requireLogin, requireRole('super_admin', 'admin_pam'), async (req, res) => {

@@ -59,20 +59,124 @@
           <div class="card-header">
             <span class="card-title">Data Meter (<%= pelanggan.meter ? pelanggan.meter.length : 0 %>)</span>
             <% if (['super_admin','admin_pam'].includes(user.role)) { %>
-            <a href="/meter/tambah?pelanggan_id=<%= pelanggan.id %>" class="btn btn-primary btn-xs">+ Tambah Meter</a>
+            <button type="button" class="btn btn-primary btn-xs" onclick="toggleMeterForm('form-tambah-meter')">+ Tambah Meter</button>
             <% } %>
           </div>
+
+          <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+          <div id="form-tambah-meter" style="display:none;padding:12px;background:var(--sub-bg);border-radius:8px;margin-bottom:12px;">
+            <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">No. Meter dibuat otomatis (GT...)</p>
+            <form method="POST" action="/meter/tambah">
+              <input type="hidden" name="pelanggan_id" value="<%= pelanggan.id %>">
+              <input type="hidden" name="redirect_to" value="/pelanggan/<%= pelanggan.id %>">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Angka Awal (m³)</label>
+                  <input type="number" name="angka_awal" class="form-control" value="0" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tgl Pasang</label>
+                  <input type="date" name="tanggal_pasang" class="form-control">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Merk</label>
+                  <input type="text" name="merk" class="form-control" placeholder="Merk meter">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Diameter</label>
+                  <input type="text" name="diameter" class="form-control" placeholder="cth: 1/2 inci">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Angka Awal (m³)</label>
+                  <input type="number" name="angka_awal" class="form-control" value="0" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-control">
+                    <option value="aktif">Aktif</option>
+                    <option value="rusak">Rusak</option>
+                    <option value="diganti">Diganti</option>
+                    <option value="dicabut">Dicabut</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="submit" class="btn btn-primary btn-sm">Simpan Meter</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMeterForm('form-tambah-meter')">Batal</button>
+              </div>
+            </form>
+          </div>
+          <% } %>
+
           <% if (pelanggan.meter && pelanggan.meter.length > 0) { %>
             <% pelanggan.meter.forEach(m => { %>
             <div style="padding:10px;background:var(--sub-bg);border-radius:8px;margin-bottom:8px;">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <strong style="font-size:13px;"><%= m.no_meter %></strong>
-                <span class="badge badge-<%= m.status === 'aktif' ? 'success' : 'muted' %>"><%= m.status %></span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span class="badge badge-<%= m.status === 'aktif' ? 'success' : 'muted' %>"><%= m.status %></span>
+                  <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                  <button type="button" class="btn btn-secondary btn-xs" onclick="toggleMeterForm('form-edit-meter-<%= m.id %>')">Edit</button>
+                  <% } %>
+                </div>
               </div>
               <div style="font-size:12px;color:var(--muted);margin-top:4px;">
                 Dipasang: <%= formatTanggal(m.tanggal_pasang) %> &bull; Angka awal: <%= m.angka_awal %> m³
                 <% if (m.merk) { %>&bull; <%= m.merk %><% } %>
+                <% if (m.diameter) { %>&bull; Ø <%= m.diameter %><% } %>
               </div>
+
+              <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+              <div id="form-edit-meter-<%= m.id %>" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                <form method="POST" action="/meter/<%= m.id %>/edit">
+                  <input type="hidden" name="pelanggan_id" value="<%= pelanggan.id %>">
+                  <input type="hidden" name="redirect_to" value="/pelanggan/<%= pelanggan.id %>">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">No. Meter *</label>
+                      <input type="text" name="no_meter" class="form-control" value="<%= m.no_meter %>" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Tgl Pasang</label>
+                      <input type="date" name="tanggal_pasang" class="form-control" value="<%= m.tanggal_pasang ? m.tanggal_pasang.toString().slice(0,10) : '' %>">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Merk</label>
+                      <input type="text" name="merk" class="form-control" value="<%= m.merk || '' %>">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Diameter</label>
+                      <input type="text" name="diameter" class="form-control" value="<%= m.diameter || '' %>">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Angka Awal (m³)</label>
+                      <input type="number" name="angka_awal" class="form-control" value="<%= m.angka_awal %>" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Status</label>
+                      <select name="status" class="form-control">
+                        <option value="aktif" <%= m.status==='aktif'?'selected':'' %>>Aktif</option>
+                        <option value="rusak" <%= m.status==='rusak'?'selected':'' %>>Rusak</option>
+                        <option value="diganti" <%= m.status==='diganti'?'selected':'' %>>Diganti</option>
+                        <option value="dicabut" <%= m.status==='dicabut'?'selected':'' %>>Dicabut</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMeterForm('form-edit-meter-<%= m.id %>')">Batal</button>
+                  </div>
+                </form>
+              </div>
+              <% } %>
             </div>
             <% }) %>
           <% } else { %>
@@ -107,5 +211,11 @@
     </div>
   </div>
 </div>
+<script>
+function toggleMeterForm(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 </body>
 </html>

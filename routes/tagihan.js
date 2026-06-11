@@ -38,7 +38,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'kasir', '
 
   res.render('tagihan/index', {
     currentPage: 'tagihan',
-    tagihanList: rows, count, totalPages, page: parseInt(page),
+    tagihanList: rows, count, totalPages, page: parseInt(page), limit,
     periodeList, q, status, periode_id,
   });
 });

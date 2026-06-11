@@ -25,11 +25,12 @@
     <div class="card">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Pembayaran</th><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Pembayaran</th><th>No. Pelanggan</th><th>Nama</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th></tr></thead>
           <tbody>
             <% if (pembayaranList.length === 0) { %><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
-            <% pembayaranList.forEach(p => { %>
+            <% pembayaranList.forEach((p, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><small><%= p.no_pembayaran %></small></td>
               <td><%= p.pelanggan ? p.pelanggan.no_pelanggan : '-' %></td>
               <td><strong><%= p.pelanggan ? p.pelanggan.nama : '-' %></strong></td>
@@ -42,6 +43,13 @@
           </tbody>
         </table>
       </div>
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&dari=<%= dari||'' %>&sampai=<%= sampai||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
     </div>
   </div>
 </div>

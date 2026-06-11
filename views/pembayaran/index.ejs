@@ -32,11 +32,12 @@
     <div class="card">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Pembayaran</th><th>Pelanggan</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th><th>Kasir</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Pembayaran</th><th>Pelanggan</th><th>No. Tagihan</th><th>Tgl Bayar</th><th>Jumlah</th><th>Metode</th><th>Kasir</th><th>Aksi</th></tr></thead>
           <tbody>
             <% if (pembayaranList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data pembayaran</td></tr><% } %>
-            <% pembayaranList.forEach(p => { %>
+            <% pembayaranList.forEach((p, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><span style="font-size:12px;font-weight:600;"><%= p.no_pembayaran %></span></td>
               <td><% if (p.pelanggan) { %><strong><%= p.pelanggan.nama %></strong><br><small style="color:var(--muted);"><%= p.pelanggan.no_pelanggan %></small><% } %></td>
               <td><small><%= p.tagihan ? p.tagihan.no_tagihan : '-' %></small></td>

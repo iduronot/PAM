@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: mode === 'tambah' ? 'Catat Pengeluaran' : 'Edit Pengeluaran' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= mode === 'tambah' ? 'Catat Pengeluaran Baru' : 'Edit Pengeluaran' %></h1>
+      <a href="/pengeluaran" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <div style="max-width:640px;">
+      <form method="POST" action="/pengeluaran/<%= mode === 'edit' ? pengeluaran.id + '/edit' : 'tambah' %>">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Detail Pengeluaran</span></div>
+
+          <% if (mode === 'edit') { %>
+          <div class="form-group">
+            <label class="form-label">No. Pengeluaran</label>
+            <input type="text" class="form-control" value="<%= pengeluaran.no_pengeluaran %>" disabled style="color:var(--muted);">
+          </div>
+          <% } %>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tanggal *</label>
+              <input type="date" name="tanggal" class="form-control" value="<%= pengeluaran.tanggal ? pengeluaran.tanggal.toString().slice(0,10) : '' %>" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kategori *</label>
+              <select name="kategori" class="form-control" required>
+                <% Object.entries(LABEL_KATEGORI).forEach(([k, v]) => { %>
+                <option value="<%= k %>" <%= pengeluaran.kategori === k ? 'selected' : '' %>><%= v %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Keterangan *</label>
+            <input type="text" name="keterangan" class="form-control" value="<%= pengeluaran.keterangan || '' %>" required placeholder="Deskripsi pengeluaran...">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Jumlah (Rp) *</label>
+              <input type="number" name="jumlah" class="form-control" value="<%= pengeluaran.jumlah || '' %>" required min="0" step="1" placeholder="0" id="inputJumlah" oninput="previewRupiah(this.value)">
+              <small id="previewRp" style="color:var(--muted);font-size:12px;"></small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Metode Bayar</label>
+              <select name="metode_bayar" class="form-control">
+                <option value="tunai" <%= (!pengeluaran.metode_bayar || pengeluaran.metode_bayar==='tunai') ? 'selected' : '' %>>Tunai</option>
+                <option value="transfer" <%= pengeluaran.metode_bayar==='transfer' ? 'selected' : '' %>>Transfer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea name="catatan" class="form-control" rows="2" placeholder="Catatan tambahan (opsional)..."><%= pengeluaran.catatan || '' %></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <button type="submit" class="btn btn-primary">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              <%= mode === 'tambah' ? 'Simpan Pengeluaran' : 'Perbarui' %>
+            </button>
+            <a href="/pengeluaran" class="btn btn-secondary">Batal</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function previewRupiah(val) {
+  const n = parseFloat(val);
+  document.getElementById('previewRp').textContent = isNaN(n) ? '' : 'Rp ' + n.toLocaleString('id-ID');
+}
+// Tampilkan preview saat load edit
+window.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('inputJumlah');
+  if (el && el.value) previewRupiah(el.value);
+});
+</script>
+</body>
+</html>

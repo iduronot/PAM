@@ -8,6 +8,29 @@
   <div class="content">
     <%- include('../partials/flash') %>
 
+    <!-- Filter bulan/tahun -->
+    <form method="GET" style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <select name="bulan" class="form-control" style="width:auto;">
+        <% ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].forEach((b,i) => { %>
+        <option value="<%= i+1 %>" <%=bulanFilter==i+1?'selected':''%>><%= b %></option>
+        <% }) %>
+      </select>
+      <select name="tahun" class="form-control" style="width:auto;">
+        <% for(let y = tahunIni; y >= tahunIni - 3; y--) { %>
+        <option value="<%= y %>" <%=tahunFilter==y?'selected':''%>><%= y %></option>
+        <% } %>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Tampilkan</button>
+      <% if (bulanFilter != bulanIni || tahunFilter != tahunIni) { %>
+      <a href="/dashboard" class="btn btn-secondary btn-sm">Bulan Ini</a>
+      <% } %>
+      <span style="font-size:12px;color:var(--muted);margin-left:4px;">
+        Menampilkan data: <strong style="color:var(--text);">
+          <%= ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][bulanFilter-1] %> <%= tahunFilter %>
+        </strong>
+      </span>
+    </form>
+
     <div class="stats-grid">
       <div class="stat-card blue">
         <div class="stat-label">Pelanggan Aktif</div>
@@ -28,6 +51,47 @@
         <div class="stat-label">Pengaduan Baru</div>
         <div class="stat-value"><%= pengaduanBaru %></div>
         <div class="stat-sub"><%= pengaduanBelumSelesai %> belum selesai</div>
+      </div>
+    </div>
+
+    <!-- Ringkasan Keuangan -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="card" style="padding:16px;border-left:4px solid var(--success);">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Pemasukan Bulan Ini</div>
+        <div style="font-size:18px;font-weight:700;color:var(--success);"><%= formatRupiah(pemasukanBulanIni) %></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">dari pembayaran tagihan</div>
+      </div>
+      <div class="card" style="padding:16px;border-left:4px solid var(--danger);">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Pengeluaran Bulan Ini</div>
+        <div style="font-size:18px;font-weight:700;color:var(--danger);"><%= formatRupiah(pengeluaranBulanIni) %></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;"><a href="/pengeluaran" style="color:var(--primary);">Lihat detail</a></div>
+      </div>
+      <div class="card" style="padding:16px;border-left:4px solid <%= saldoBulanIni >= 0 ? 'var(--primary)' : 'var(--warning)' %>;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Saldo Bulan Ini</div>
+        <div style="font-size:18px;font-weight:700;color:<%= saldoBulanIni >= 0 ? 'var(--primary)' : 'var(--warning)' %>;"><%= formatRupiah(Math.abs(saldoBulanIni)) %></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;"><%= saldoBulanIni >= 0 ? 'Surplus' : 'Defisit' %></div>
+      </div>
+    </div>
+
+    <!-- Neraca Keseluruhan -->
+    <div class="card" style="margin-bottom:16px;padding:16px;">
+      <div class="card-header" style="margin-bottom:12px;"><span class="card-title">Neraca Keuangan Keseluruhan</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:center;">
+        <div>
+          <div style="font-size:12px;color:var(--muted);">Total Pemasukan</div>
+          <div style="font-size:20px;font-weight:700;color:var(--success);"><%= formatRupiah(pemasukanTotal) %></div>
+          <div style="font-size:11px;color:var(--muted);">seluruh pembayaran</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);">Total Pengeluaran</div>
+          <div style="font-size:20px;font-weight:700;color:var(--danger);"><%= formatRupiah(pengeluaranTotal) %></div>
+          <div style="font-size:11px;color:var(--muted);">seluruh pengeluaran</div>
+        </div>
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:12px;color:var(--muted);">Saldo Bersih</div>
+          <div style="font-size:24px;font-weight:800;color:<%= saldoTotal >= 0 ? 'var(--success)' : 'var(--danger)' %>;"><%= formatRupiah(Math.abs(saldoTotal)) %></div>
+          <div style="font-size:12px;font-weight:600;color:<%= saldoTotal >= 0 ? 'var(--success)' : 'var(--danger)' %>;"><%= saldoTotal >= 0 ? '▲ Surplus' : '▼ Defisit' %></div>
+        </div>
       </div>
     </div>
 
@@ -108,8 +172,9 @@ new Chart(ctx, {
   data: {
     labels: data.map(d => d.label),
     datasets: [
-      { label: 'Total Tagihan', data: data.map(d => d.total), backgroundColor: 'rgba(14,165,233,.3)', borderColor: '#0EA5E9', borderWidth: 2, borderRadius: 6 },
-      { label: 'Terbayar', data: data.map(d => d.lunas), backgroundColor: 'rgba(16,185,129,.3)', borderColor: '#10B981', borderWidth: 2, borderRadius: 6 },
+      { label: 'Total Tagihan', data: data.map(d => d.total), backgroundColor: 'rgba(14,165,233,.25)', borderColor: '#0EA5E9', borderWidth: 2, borderRadius: 6 },
+      { label: 'Terbayar (Pemasukan)', data: data.map(d => d.lunas), backgroundColor: 'rgba(16,185,129,.25)', borderColor: '#10B981', borderWidth: 2, borderRadius: 6 },
+      { label: 'Pengeluaran', data: data.map(d => d.keluar), backgroundColor: 'rgba(239,68,68,.25)', borderColor: '#EF4444', borderWidth: 2, borderRadius: 6 },
     ],
   },
   options: {

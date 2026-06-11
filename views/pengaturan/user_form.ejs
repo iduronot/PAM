@@ -30,7 +30,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label"><%= mode === 'tambah' ? 'Password *' : 'Password Baru (kosongkan jika tidak diubah)' %></label>
-            <input type="password" name="password" class="form-control" <%= mode === 'tambah' ? 'required' : '' %> placeholder="Min. 6 karakter">
+            <input type="password" name="password" class="form-control" <%= mode === 'tambah' ? 'required' : '' %> placeholder="<%= mode === 'tambah' ? 'Masukkan password' : 'Kosongkan jika tidak diubah' %>">
           </div>
           <div class="form-group">
             <label class="form-label">Role *</label>

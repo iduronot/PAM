@@ -16,13 +16,16 @@
 
     <div class="card">
       <form method="GET" class="search-bar">
+        <input name="q" class="search-input" placeholder="Cari no. tiket atau nama pelanggan..." value="<%= q || '' %>">
         <select name="status" class="form-control" style="width:auto;">
           <option value="">Semua Status</option>
           <option value="baru" <%=status==='baru'?'selected':''%>>Baru</option>
           <option value="diverifikasi" <%=status==='diverifikasi'?'selected':''%>>Diverifikasi</option>
           <option value="ditugaskan" <%=status==='ditugaskan'?'selected':''%>>Ditugaskan</option>
           <option value="dalam_proses" <%=status==='dalam_proses'?'selected':''%>>Dalam Proses</option>
+          <option value="menunggu_pelanggan" <%=status==='menunggu_pelanggan'?'selected':''%>>Menunggu Pelanggan</option>
           <option value="selesai" <%=status==='selesai'?'selected':''%>>Selesai</option>
+          <option value="ditolak" <%=status==='ditolak'?'selected':''%>>Ditolak</option>
         </select>
         <select name="prioritas" class="form-control" style="width:auto;">
           <option value="">Semua Prioritas</option>
@@ -31,17 +34,29 @@
           <option value="sedang" <%=prioritas==='sedang'?'selected':''%>>Sedang</option>
           <option value="rendah" <%=prioritas==='rendah'?'selected':''%>>Rendah</option>
         </select>
-        <button type="submit" class="btn btn-primary">Filter</button>
+        <select name="jenis" class="form-control" style="width:auto;">
+          <option value="">Semua Jenis</option>
+          <option value="air_tidak_mengalir" <%=jenis==='air_tidak_mengalir'?'selected':''%>>Air Tidak Mengalir</option>
+          <option value="air_keruh" <%=jenis==='air_keruh'?'selected':''%>>Air Keruh</option>
+          <option value="meter_rusak" <%=jenis==='meter_rusak'?'selected':''%>>Meter Rusak</option>
+          <option value="kebocoran_pipa" <%=jenis==='kebocoran_pipa'?'selected':''%>>Kebocoran Pipa</option>
+          <option value="tagihan_tidak_sesuai" <%=jenis==='tagihan_tidak_sesuai'?'selected':''%>>Tagihan Tidak Sesuai</option>
+          <option value="sambungan_bermasalah" <%=jenis==='sambungan_bermasalah'?'selected':''%>>Sambungan Bermasalah</option>
+          <option value="pasang_baru" <%=jenis==='pasang_baru'?'selected':''%>>Pasang Baru</option>
+          <option value="lainnya" <%=jenis==='lainnya'?'selected':''%>>Lainnya</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Cari</button>
         <a href="/pengaduan" class="btn btn-secondary">Reset</a>
       </form>
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Tiket</th><th>Pelanggan</th><th>Jenis</th><th>Prioritas</th><th>Petugas</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Tiket</th><th>Pelanggan</th><th>Jenis</th><th>Prioritas</th><th>Petugas</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead>
           <tbody>
             <% if (pengaduanList.length === 0) { %><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada pengaduan</td></tr><% } %>
-            <% pengaduanList.forEach(p => { %>
+            <% pengaduanList.forEach((p, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><span style="font-weight:600;font-size:12px;color:var(--primary);"><%= p.no_tiket %></span></td>
               <td><% if (p.pelanggan) { %><strong><%= p.pelanggan.nama %></strong><br><small style="color:var(--muted);"><%= p.pelanggan.no_pelanggan %></small><% } %></td>
               <td><small><%= p.jenis_pengaduan.replace(/_/g,' ') %></small></td>

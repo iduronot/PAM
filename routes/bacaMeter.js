@@ -16,8 +16,13 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // List periode
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer', 'petugas_meter'), async (req, res) => {
-  const periodeList = await PeriodeBaca.findAll({ order: [['tahun', 'DESC'], ['bulan', 'DESC']] });
-  res.render('baca_meter/index', { currentPage: 'baca_meter', periodeList });
+  const { tahun, status } = req.query;
+  const where = {};
+  if (tahun) where.tahun = tahun;
+  if (status) where.status = status;
+  const periodeList = await PeriodeBaca.findAll({ where, order: [['tahun', 'DESC'], ['bulan', 'DESC']] });
+  const tahunList = await PeriodeBaca.findAll({ attributes: ['tahun'], group: ['tahun'], order: [['tahun', 'DESC']] });
+  res.render('baca_meter/index', { currentPage: 'baca_meter', periodeList, tahunList, tahun, status });
 });
 
 // Buat periode baru
@@ -81,30 +86,36 @@ router.get('/periode/:periodeId', requireLogin, requireRole('super_admin', 'admi
   const periode = await PeriodeBaca.findByPk(req.params.periodeId);
   if (!periode) { req.flash('error', 'Periode tidak ditemukan'); return res.redirect('/baca-meter'); }
 
-  const { rute_id, status } = req.query;
+  const { rute_id, status, page = 1 } = req.query;
+  const limit = 25;
+  const offset = (parseInt(page) - 1) * limit;
   const where = { periode_id: periode.id };
   if (status) where.status = status;
 
-  const pencatatanList = await PencatatanMeter.findAll({
-    where,
-    include: [
-      { model: Pelanggan, as: 'pelanggan', include: [{ model: Rute, as: 'rute' }], where: rute_id ? { rute_id } : undefined },
-      { model: Meter, as: 'meter' },
-      { model: User, as: 'petugas' },
-    ],
-    order: [[{ model: Pelanggan, as: 'pelanggan' }, 'no_pelanggan', 'ASC']],
-  });
+  const [rowCount, pencatatanList, ruteList, statsTotal, statsTerbaca, statsBelum, statsAnomali, statsVerified] = await Promise.all([
+    PencatatanMeter.count({ where, include: rute_id ? [{ model: Pelanggan, as: 'pelanggan', where: { rute_id } }] : [] }),
+    PencatatanMeter.findAll({
+      where,
+      include: [
+        { model: Pelanggan, as: 'pelanggan', include: [{ model: Rute, as: 'rute' }], where: rute_id ? { rute_id } : undefined },
+        { model: Meter, as: 'meter' },
+        { model: User, as: 'petugas' },
+      ],
+      order: [[{ model: Pelanggan, as: 'pelanggan' }, 'no_pelanggan', 'ASC']],
+      limit, offset,
+    }),
+    Rute.findAll({ order: [['urutan', 'ASC']] }),
+    PencatatanMeter.count({ where: { periode_id: periode.id } }),
+    PencatatanMeter.count({ where: { periode_id: periode.id, status: 'terbaca' } }),
+    PencatatanMeter.count({ where: { periode_id: periode.id, status: 'belum_dibaca' } }),
+    PencatatanMeter.count({ where: { periode_id: periode.id, status: 'anomali' } }),
+    PencatatanMeter.count({ where: { periode_id: periode.id, status_verifikasi: 'verified' } }),
+  ]);
 
-  const ruteList = await Rute.findAll({ order: [['urutan', 'ASC']] });
-  const stats = {
-    total: await PencatatanMeter.count({ where: { periode_id: periode.id } }),
-    terbaca: await PencatatanMeter.count({ where: { periode_id: periode.id, status: 'terbaca' } }),
-    belum: await PencatatanMeter.count({ where: { periode_id: periode.id, status: 'belum_dibaca' } }),
-    anomali: await PencatatanMeter.count({ where: { periode_id: periode.id, status: 'anomali' } }),
-    verified: await PencatatanMeter.count({ where: { periode_id: periode.id, status_verifikasi: 'verified' } }),
-  };
+  const stats = { total: statsTotal, terbaca: statsTerbaca, belum: statsBelum, anomali: statsAnomali, verified: statsVerified };
+  const totalPages = Math.ceil(rowCount / limit);
 
-  res.render('baca_meter/detail_periode', { currentPage: 'baca_meter', periode, pencatatanList, ruteList, stats, rute_id, status });
+  res.render('baca_meter/detail_periode', { currentPage: 'baca_meter', periode, pencatatanList, ruteList, stats, rute_id, status, rowCount, totalPages, page: parseInt(page), limit });
 });
 
 // Form input baca meter

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Keuangan Publik — <%= namaOrganisasi %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f172a; --card: #1e293b; --border: rgba(255,255,255,.08);
+      --text: #f1f5f9; --muted: #94a3b8; --sub-bg: rgba(255,255,255,.04);
+      --green: #10b981; --red: #ef4444; --blue: #0ea5e9; --yellow: #f59e0b;
+    }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0f172a, #1e3a5f);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo { width: 44px; height: 44px; background: linear-gradient(135deg,#0ea5e9,#38bdf8); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .org-name { font-size: 18px; font-weight: 800; }
+    .org-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .badge-publik { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: #6ee7b7; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .btn-keluar { background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 12px; cursor: pointer; text-decoration: none; transition: .15s; }
+    .btn-keluar:hover { background: rgba(255,255,255,.1); color: var(--text); }
+
+    /* Content */
+    .content { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    /* Filter */
+    .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+    select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 13px; cursor: pointer; }
+    .btn { padding: 8px 18px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: .15s; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-secondary { background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--muted); text-decoration: none; display: inline-block; }
+    .period-label { font-size: 13px; color: var(--muted); }
+    .period-label strong { color: var(--text); }
+
+    /* Cards */
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 16px; }
+    @media(max-width:640px) { .grid-3,.grid-2 { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-big { font-size: 26px; font-weight: 800; line-height: 1; }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    /* Neraca card */
+    .neraca-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+    .neraca-item { padding: 20px; text-align: center; }
+    .neraca-item + .neraca-item { border-left: 1px solid var(--border); }
+    .neraca-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .neraca-value { font-size: 22px; font-weight: 800; }
+    .neraca-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    @media(max-width:640px) { .neraca-grid { grid-template-columns: 1fr; } .neraca-item + .neraca-item { border-left: none; border-top: 1px solid var(--border); } }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(16,185,129,.15); color: #6ee7b7; }
+    .badge-orange { background: rgba(245,158,11,.15); color: #fcd34d; }
+    .badge-blue { background: rgba(14,165,233,.15); color: #7dd3fc; }
+    .badge-muted { background: rgba(148,163,184,.12); color: var(--muted); }
+
+    /* Footer */
+    .pub-footer { text-align: center; padding: 28px; font-size: 12px; color: #475569; border-top: 1px solid var(--border); margin-top: 16px; }
+
+    /* Progress bar */
+    .progress-wrap { background: rgba(255,255,255,.06); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+    .progress-bar { height: 100%; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">💧</div>
+    <div>
+      <div class="org-name"><%= namaOrganisasi %></div>
+      <div class="org-sub"><% if (alamatOrganisasi) { %><%= alamatOrganisasi %><% } else { %>Laporan Transparansi Keuangan<% } %></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span class="badge-publik">Publik</span>
+    <a href="/publik/logout" class="btn-keluar">Keluar</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Filter Periode -->
+  <form method="GET" action="/publik/dashboard" class="filter-row">
+    <select name="bulan">
+      <% ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].forEach((b,i) => { %>
+      <option value="<%= i+1 %>" <%= bulan==i+1?'selected':'' %>><%= b %></option>
+      <% }) %>
+    </select>
+    <select name="tahun">
+      <% for(let y = tahunNow; y >= tahunNow - 3; y--) { %>
+      <option value="<%= y %>" <%= tahun==y?'selected':'' %>><%= y %></option>
+      <% } %>
+    </select>
+    <button type="submit" class="btn btn-primary">Tampilkan</button>
+    <% if (bulan != bulanNow || tahun != tahunNow) { %>
+    <a href="/publik/dashboard" class="btn btn-secondary">Bulan Ini</a>
+    <% } %>
+    <span class="period-label">Laporan: <strong><%= ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][bulan-1] %> <%= tahun %></strong></span>
+  </form>
+
+  <!-- Stat bulanan -->
+  <div class="grid-3">
+    <div class="card" style="border-top:3px solid var(--green);">
+      <div class="card-title">Pemasukan Bulan Ini</div>
+      <div class="stat-big" style="color:var(--green);">
+        Rp <%= pemasukanBulan.toLocaleString('id-ID') %>
+      </div>
+      <div class="stat-sub">dari pembayaran iuran air</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--red);">
+      <div class="card-title">Pengeluaran Bulan Ini</div>
+      <div class="stat-big" style="color:var(--red);">
+        Rp <%= pengeluaranBulan.toLocaleString('id-ID') %>
+      </div>
+      <div class="stat-sub"><%= pengeluaranDetail.length %> transaksi pengeluaran</div>
+    </div>
+    <div class="card" style="border-top:3px solid <%= saldoBulan >= 0 ? 'var(--blue)' : 'var(--yellow)' %>;">
+      <div class="card-title">Saldo Bulan Ini</div>
+      <div class="stat-big" style="color:<%= saldoBulan >= 0 ? 'var(--blue)' : 'var(--yellow)' %>;">
+        <% if (saldoBulan < 0) { %>-<% } %>Rp <%= Math.abs(saldoBulan).toLocaleString('id-ID') %>
+      </div>
+      <div class="stat-sub"><%= saldoBulan >= 0 ? 'Surplus' : 'Defisit' %> bulan ini</div>
+    </div>
+  </div>
+
+  <!-- Neraca keseluruhan -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title" style="padding-bottom:4px;">Neraca Keuangan Keseluruhan</div>
+    <div class="neraca-grid">
+      <div class="neraca-item">
+        <div class="neraca-label">Total Pemasukan</div>
+        <div class="neraca-value" style="color:var(--green);">Rp <%= pemasukanTotal.toLocaleString('id-ID') %></div>
+        <div class="neraca-note">sejak awal operasi</div>
+      </div>
+      <div class="neraca-item">
+        <div class="neraca-label">Total Pengeluaran</div>
+        <div class="neraca-value" style="color:var(--red);">Rp <%= pengeluaranTotal.toLocaleString('id-ID') %></div>
+        <div class="neraca-note">sejak awal operasi</div>
+      </div>
+      <div class="neraca-item" style="background:<%= saldoTotal >= 0 ? 'rgba(16,185,129,.06)' : 'rgba(239,68,68,.06)' %>;border-radius:10px;">
+        <div class="neraca-label">Saldo Bersih</div>
+        <div class="neraca-value" style="color:<%= saldoTotal >= 0 ? 'var(--green)' : 'var(--red)' %>;">
+          <% if (saldoTotal < 0) { %>-<% } %>Rp <%= Math.abs(saldoTotal).toLocaleString('id-ID') %>
+        </div>
+        <div class="neraca-note" style="font-weight:700;color:<%= saldoTotal >= 0 ? '#6ee7b7' : '#fca5a5' %>;"><%= saldoTotal >= 0 ? '▲ Surplus' : '▼ Defisit' %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart + Rincian Pengeluaran -->
+  <div class="grid-2">
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-title">Tren 6 Bulan Terakhir</div>
+      <canvas id="chartKeuangan" height="200"></canvas>
+    </div>
+
+    <!-- Rincian pengeluaran bulan ini -->
+    <div class="card">
+      <div class="card-title">Rincian Pengeluaran Bulan Ini</div>
+      <% if (pengeluaranDetail.length === 0) { %>
+        <p style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0;">Tidak ada pengeluaran bulan ini</p>
+      <% } else { %>
+        <% const totalBulan = pengeluaranDetail.reduce((s,p) => s + parseFloat(p.jumlah), 0); %>
+        <% pengeluaranDetail.forEach(p => { %>
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div>
+              <span style="font-size:13px;font-weight:600;"><%= p.keterangan %></span>
+              <span class="badge badge-<%= {operasional:'blue',pemeliharaan:'orange',gaji:'green',utilitas:'muted',perlengkapan:'muted',lain_lain:'muted'}[p.kategori]||'muted' %>" style="margin-left:6px;font-size:10px;"><%= LABEL_KATEGORI[p.kategori]||p.kategori %></span>
+            </div>
+            <span style="font-size:13px;font-weight:700;color:var(--red);">Rp <%= parseFloat(p.jumlah).toLocaleString('id-ID') %></span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar" style="width:<%= totalBulan > 0 ? Math.round(parseFloat(p.jumlah)/totalBulan*100) : 0 %>%;background:<%= {operasional:'var(--blue)',pemeliharaan:'var(--yellow)',gaji:'var(--green)',utilitas:'#8b5cf6',perlengkapan:'#ec4899',lain_lain:'var(--muted)'}[p.kategori]||'var(--muted)' %>;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;"><%= p.metode_bayar %> &bull; <%= formatTanggal ? formatTanggal(p.tanggal) : p.tanggal %></div>
+        </div>
+        <% }) %>
+        <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
+          <span style="color:var(--muted);">Total</span>
+          <span style="color:var(--red);">Rp <%= totalBulan.toLocaleString('id-ID') %></span>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Info pelanggan -->
+  <div class="card" style="text-align:center;padding:16px;">
+    <div style="font-size:12px;color:var(--muted);">Jumlah Pelanggan Aktif</div>
+    <div style="font-size:28px;font-weight:800;color:var(--blue);margin:4px 0;"><%= totalPelangganAktif %></div>
+    <div style="font-size:12px;color:var(--muted);">kepala keluarga terlayani</div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="pub-footer">
+  Data diperbarui secara real-time &bull; <%= namaOrganisasi %> &bull;
+  Halaman ini hanya dapat diakses dengan kode resmi dari pengurus PAM
+</div>
+
+<script>
+const data = <%- chartData %>;
+const ctx = document.getElementById('chartKeuangan').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: data.map(d => d.label),
+    datasets: [
+      {
+        label: 'Pemasukan',
+        data: data.map(d => d.masuk),
+        backgroundColor: 'rgba(16,185,129,.25)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        borderRadius: 5,
+      },
+      {
+        label: 'Pengeluaran',
+        data: data.map(d => d.keluar),
+        backgroundColor: 'rgba(239,68,68,.25)',
+        borderColor: '#EF4444',
+        borderWidth: 2,
+        borderRadius: 5,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index' },
+    plugins: {
+      legend: { labels: { color: '#94A3B8', font: { family: 'Outfit' } } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ' Rp ' + ctx.parsed.y.toLocaleString('id-ID'),
+        },
+      },
+    },
+    scales: {
+      x: { ticks: { color: '#94A3B8', font: { family: 'Outfit' } }, grid: { color: 'rgba(255,255,255,.04)' } },
+      y: {
+        ticks: { color: '#94A3B8', font: { family: 'Outfit' }, callback: v => 'Rp ' + (v/1000).toFixed(0) + 'k' },
+        grid: { color: 'rgba(255,255,255,.04)' },
+      },
+    },
+  },
+});
+</script>
+</body>
+</html>

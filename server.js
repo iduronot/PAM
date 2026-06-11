@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'pamsimas2025',
-  resave: false,
+  resave: true,
   saveUninitialized: false,
   cookie: { maxAge: 8 * 60 * 60 * 1000 }, // 8 jam
 }));
@@ -47,9 +47,12 @@ app.use('/tarif', require('./routes/tarif'));
 app.use('/tagihan', require('./routes/tagihan'));
 app.use('/pembayaran', require('./routes/pembayaran'));
 app.use('/pengaduan', require('./routes/pengaduan'));
+app.use('/pengeluaran', require('./routes/pengeluaran'));
 app.use('/laporan', require('./routes/laporan'));
 app.use('/pengaturan', require('./routes/pengaturan'));
+app.use('/akun', require('./routes/akun'));
 app.use('/pelanggan-portal', require('./routes/portalPelanggan'));
+app.use('/publik', require('./routes/publik'));
 
 app.get('/', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
@@ -63,8 +66,16 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-sequelize.sync({ alter: false }).then(() => {
+const { AppSetting } = require('./models');
+
+sequelize.sync({ alter: false }).then(async () => {
   console.log('Database tersinkronisasi');
+  // Seed default app settings jika belum ada
+  await AppSetting.bulkCreate([
+    { key: 'kode_publik', value: 'PAM2025', label: 'Kode Akses Dashboard Publik' },
+    { key: 'nama_organisasi', value: 'PAMSIMAS', label: 'Nama Organisasi' },
+    { key: 'alamat_organisasi', value: '', label: 'Alamat Organisasi' },
+  ], { ignoreDuplicates: true });
   app.listen(PORT, () => console.log(`PAMSIMAS berjalan di http://localhost:${PORT}`));
 }).catch(err => {
   console.error('Gagal koneksi database:', err.message);

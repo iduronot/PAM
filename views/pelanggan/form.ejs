@@ -19,8 +19,12 @@
             <div class="card-header"><span class="card-title">Data Utama</span></div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Nomor Sambungan *</label>
-                <input type="text" name="no_sambungan" class="form-control" value="<%= pelanggan.no_sambungan || '' %>" required placeholder="Contoh: SR-001">
+                <label class="form-label">Nomor Sambungan</label>
+                <% if (mode === 'tambah') { %>
+                <input type="text" class="form-control" value="Otomatis (GT...)" disabled style="color:var(--muted);">
+                <% } else { %>
+                <input type="text" name="no_sambungan" class="form-control" value="<%= pelanggan.no_sambungan || '' %>" required>
+                <% } %>
               </div>
               <div class="form-group">
                 <label class="form-label">Tanggal Daftar</label>
@@ -107,6 +111,38 @@
           </div>
 
           <% if (mode === 'tambah') { %>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><span class="card-title">Data Meter Awal</span></div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" name="pasang_meter" value="1" id="pasangMeter" onchange="document.getElementById('meterFields').style.display=this.checked?'block':'none'">
+                Pasang meter saat pendaftaran
+              </label>
+            </div>
+            <div id="meterFields" style="display:none;">
+              <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">No. Meter dibuat otomatis (GT...)</p>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Angka Awal (m³)</label>
+                  <input type="number" name="meter_angka_awal" class="form-control" value="0" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tgl Pasang</label>
+                  <input type="date" name="meter_tanggal_pasang" class="form-control">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Merk</label>
+                  <input type="text" name="meter_merk" class="form-control" placeholder="Merk meter">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Diameter</label>
+                  <input type="text" name="meter_diameter" class="form-control" placeholder="cth: 1/2 inci">
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Akun Portal</span></div>
             <div class="form-group">

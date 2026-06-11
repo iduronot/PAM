@@ -54,11 +54,12 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>No. Pelanggan</th><th>Nama</th><th>Rute</th><th>Angka Lalu</th><th>Angka Sekarang</th><th>Pemakaian</th><th>Status</th><th>Verifikasi</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:40px;">No</th><th>No. Pelanggan</th><th>Nama</th><th>Rute</th><th>Angka Lalu</th><th>Angka Sekarang</th><th>Pemakaian</th><th>Status</th><th>Verifikasi</th><th>Aksi</th></tr></thead>
           <tbody>
             <% if (pencatatanList.length === 0) { %><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data</td></tr><% } %>
-            <% pencatatanList.forEach(c => { %>
+            <% pencatatanList.forEach((c, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><span style="font-weight:600;color:var(--primary);"><%= c.pelanggan ? c.pelanggan.no_pelanggan : '-' %></span></td>
               <td><%= c.pelanggan ? c.pelanggan.nama : '-' %></td>
               <td><small><%= c.pelanggan && c.pelanggan.rute ? c.pelanggan.rute.nama_rute : '-' %></small></td>
@@ -98,6 +99,13 @@
         </table>
       </div>
 
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&rute_id=<%= rute_id||'' %>&status=<%= status||'' %>" class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
       <% if (['super_admin','admin_pam'].includes(user.role) && stats.verified > 0) { %>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
         <a href="/tagihan/generate?periode_id=<%= periode.id %>" class="btn btn-primary">Generate Tagihan dari Periode Ini</a>

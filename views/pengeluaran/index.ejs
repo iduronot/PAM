@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Pengeluaran' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Pengeluaran PAM <span style="font-size:14px;color:var(--muted);">(<%= count %> data)</span></h1>
+      <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+      <a href="/pengeluaran/tambah" class="btn btn-primary">+ Catat Pengeluaran</a>
+      <% } %>
+    </div>
+
+    <!-- Summary -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Total Pengeluaran</div>
+        <div style="font-size:20px;font-weight:700;color:var(--danger);"><%= formatRupiah(total) %></div>
+        <% if (dari || sampai) { %><div style="font-size:11px;color:var(--muted);"><%= dari||'...' %> s/d <%= sampai||'...' %></div><% } %>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Jumlah Transaksi</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text);"><%= count %></div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Rata-rata / Transaksi</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text);"><%= count > 0 ? formatRupiah(Math.round(total / count)) : 'Rp 0' %></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- Filter -->
+      <form method="GET" class="search-bar" style="flex-wrap:wrap;">
+        <input name="q" class="search-input" placeholder="Cari no. / keterangan..." value="<%= q || '' %>">
+        <select name="kategori" class="form-control" style="width:auto;">
+          <option value="">Semua Kategori</option>
+          <% Object.entries(LABEL_KATEGORI).forEach(([k, v]) => { %>
+          <option value="<%= k %>" <%= kategori===k?'selected':'' %>><%= v %></option>
+          <% }) %>
+        </select>
+        <input name="dari" type="date" class="form-control" style="width:auto;" value="<%= dari||'' %>" title="Dari tanggal">
+        <input name="sampai" type="date" class="form-control" style="width:auto;" value="<%= sampai||'' %>" title="Sampai tanggal">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="/pengeluaran" class="btn btn-secondary">Reset</a>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th>No. Pengeluaran</th>
+              <th>Tanggal</th>
+              <th>Kategori</th>
+              <th>Keterangan</th>
+              <th>Jumlah</th>
+              <th>Metode</th>
+              <th>Dicatat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (list.length === 0) { %>
+            <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Belum ada data pengeluaran</td></tr>
+            <% } %>
+            <% list.forEach((p, i) => { %>
+            <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
+              <td><small style="font-family:monospace;"><%= p.no_pengeluaran %></small></td>
+              <td><%= formatTanggal(p.tanggal) %></td>
+              <td>
+                <% const warna = { operasional:'info', pemeliharaan:'warning', gaji:'success', utilitas:'muted', perlengkapan:'muted', lain_lain:'muted' }; %>
+                <span class="badge badge-<%= warna[p.kategori] || 'muted' %>"><%= LABEL_KATEGORI[p.kategori] || p.kategori %></span>
+              </td>
+              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= p.keterangan %>"><%= p.keterangan %></td>
+              <td><strong style="color:var(--danger);"><%= formatRupiah(p.jumlah) %></strong></td>
+              <td><span class="badge badge-<%= p.metode_bayar==='transfer'?'info':'muted' %>"><%= p.metode_bayar %></span></td>
+              <td style="font-size:12px;color:var(--muted);"><%= p.pencatat ? p.pencatat.nama : '-' %></td>
+              <td style="white-space:nowrap;">
+                <% if (['super_admin','admin_pam'].includes(user.role)) { %>
+                <a href="/pengeluaran/<%= p.id %>/edit" class="btn btn-secondary btn-xs">Edit</a>
+                <form method="POST" action="/pengeluaran/<%= p.id %>/hapus" style="display:inline;" onsubmit="return confirm('Hapus pengeluaran ini?')">
+                  <button type="submit" class="btn btn-danger btn-xs">Hapus</button>
+                </form>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&q=<%= q||'' %>&kategori=<%= kategori||'' %>&dari=<%= dari||'' %>&sampai=<%= sampai||'' %>"
+           class="page-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

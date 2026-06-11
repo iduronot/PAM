@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Transparansi Publik' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title">Pengaturan Transparansi Publik</h1>
+      <a href="/pengaturan" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+
+      <!-- Form pengaturan -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Konfigurasi Akses Publik</span></div>
+        <form method="POST" action="/pengaturan/publik">
+          <div class="form-group">
+            <label class="form-label">Nama Organisasi</label>
+            <input type="text" name="nama_organisasi" class="form-control" value="<%= s.nama_organisasi || 'PAMSIMAS' %>">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alamat / Wilayah</label>
+            <input type="text" name="alamat_organisasi" class="form-control" value="<%= s.alamat_organisasi || '' %>" placeholder="cth: Desa Sukamaju, Kec. Cimahi">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kode Akses Dashboard Publik</label>
+            <input type="text" name="kode_publik" class="form-control" value="<%= s.kode_publik || 'PAM2025' %>" placeholder="min. 4 karakter" autocomplete="off" style="letter-spacing:3px;font-weight:700;">
+            <small style="color:var(--muted);font-size:12px;display:block;margin-top:6px;">
+              Bagikan kode ini kepada warga. Disarankan ganti secara berkala.
+            </small>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            Simpan Pengaturan
+          </button>
+        </form>
+      </div>
+
+      <!-- Info & link -->
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><span class="card-title">Link Dashboard Publik</span></div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Bagikan URL berikut kepada warga. Mereka akan diminta memasukkan kode akses.</p>
+          <div style="background:var(--sub-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:13px;color:var(--primary);word-break:break-all;">
+            <%= baseUrl %>/publik
+          </div>
+          <a href="/publik" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">
+            Buka Halaman Publik ↗
+          </a>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Yang Terlihat Warga</span></div>
+          <ul style="list-style:none;padding:0;">
+            <% const items = [
+              'Pemasukan & pengeluaran bulan yang dipilih',
+              'Neraca keuangan keseluruhan (total surplus/defisit)',
+              'Rincian pengeluaran per transaksi dengan kategori',
+              'Grafik tren 6 bulan pemasukan vs pengeluaran',
+              'Jumlah pelanggan aktif',
+            ]; %>
+            <% items.forEach(item => { %>
+            <li style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;">
+              <svg width="14" height="14" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              <%= item %>
+            </li>
+            <% }) %>
+          </ul>
+          <p style="font-size:12px;color:var(--muted);margin-top:12px;">
+            Data sensitif seperti nama pelanggan, nomor HP, dan detail tagihan individual tidak ditampilkan.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

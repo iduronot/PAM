@@ -47,6 +47,7 @@
         <table>
           <thead>
             <tr>
+              <th style="width:40px;">No</th>
               <th>No. Pelanggan</th>
               <th>Nama</th>
               <th>Alamat</th>
@@ -61,8 +62,9 @@
             <% if (pelangganList.length === 0) { %>
             <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Tidak ada data pelanggan</td></tr>
             <% } %>
-            <% pelangganList.forEach(p => { %>
+            <% pelangganList.forEach((p, i) => { %>
             <tr>
+              <td style="color:var(--muted);font-size:12px;"><%= (page-1)*limit + i + 1 %></td>
               <td><span style="font-weight:600;color:var(--primary);"><%= p.no_pelanggan %></span><br><small style="color:var(--muted);"><%= p.no_sambungan %></small></td>
               <td><strong><%= p.nama %></strong></td>
               <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= p.alamat %></td>

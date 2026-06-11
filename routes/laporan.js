@@ -14,86 +14,96 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
 
 // Laporan tunggakan
 router.get('/tunggakan', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer', 'kasir'), async (req, res) => {
-  const { kategori_id, export: doExport } = req.query;
+  const { kategori_id, export: doExport, page = 1 } = req.query;
+  const limit = 25;
+  const offset = (parseInt(page) - 1) * limit;
   const where = { status: { [Op.in]: ['final', 'terlambat'] } };
-
-  const tagihanList = await Tagihan.findAll({
-    where,
-    include: [
-      { model: Pelanggan, as: 'pelanggan', where: kategori_id ? { kategori_id } : undefined },
-    ],
-    order: [[{ model: Pelanggan, as: 'pelanggan' }, 'nama', 'ASC']],
-  });
+  const pelangganWhere = kategori_id ? { kategori_id } : undefined;
+  const includeOpts = [{ model: Pelanggan, as: 'pelanggan', where: pelangganWhere }];
+  const order = [[{ model: Pelanggan, as: 'pelanggan' }, 'nama', 'ASC']];
 
   if (doExport === 'excel') {
-    return exportTunggakanExcel(res, tagihanList);
+    const allData = await Tagihan.findAll({ where, include: includeOpts, order });
+    return exportTunggakanExcel(res, allData);
   }
 
-  const total = tagihanList.reduce((s, t) => s + parseFloat(t.total_tagihan || 0), 0);
+  const [allForTotal, { rows: tagihanList, count }] = await Promise.all([
+    Tagihan.findAll({ where, include: [{ model: Pelanggan, as: 'pelanggan', where: pelangganWhere, attributes: [] }], attributes: ['total_tagihan'] }),
+    Tagihan.findAndCountAll({ where, include: includeOpts, order, limit, offset, distinct: true }),
+  ]);
+  const total = allForTotal.reduce((s, t) => s + parseFloat(t.total_tagihan || 0), 0);
+  const totalPages = Math.ceil(count / limit);
   const kategoriList = await KategoriPelanggan.findAll();
-  res.render('laporan/tunggakan', { currentPage: 'laporan', tagihanList, total, kategoriList, kategori_id });
+  res.render('laporan/tunggakan', { currentPage: 'laporan', tagihanList, total, kategoriList, kategori_id, count, totalPages, page: parseInt(page), limit });
 });
 
 // Laporan pembayaran
 router.get('/pembayaran', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer', 'kasir'), async (req, res) => {
-  const { dari, sampai, export: doExport } = req.query;
+  const { dari, sampai, export: doExport, page = 1 } = req.query;
+  const limit = 25;
+  const offset = (parseInt(page) - 1) * limit;
   const where = {};
   if (dari && sampai) where.tanggal_bayar = { [Op.between]: [dari, sampai] };
   else if (dari) where.tanggal_bayar = { [Op.gte]: dari };
-
-  const pembayaranList = await Pembayaran.findAll({
-    where,
-    include: [{ model: Pelanggan, as: 'pelanggan' }, { model: Tagihan, as: 'tagihan' }],
-    order: [['tanggal_bayar', 'DESC']],
-  });
+  const includeOpts = [{ model: Pelanggan, as: 'pelanggan' }, { model: Tagihan, as: 'tagihan' }];
+  const order = [['tanggal_bayar', 'DESC']];
 
   if (doExport === 'excel') {
-    return exportPembayaranExcel(res, pembayaranList);
+    const allData = await Pembayaran.findAll({ where, include: includeOpts, order });
+    return exportPembayaranExcel(res, allData);
   }
 
-  const total = pembayaranList.reduce((s, p) => s + parseFloat(p.jumlah_bayar || 0), 0);
-  res.render('laporan/pembayaran', { currentPage: 'laporan', pembayaranList, total, dari, sampai });
+  const [total, { rows: pembayaranList, count }] = await Promise.all([
+    Pembayaran.sum('jumlah_bayar', { where }),
+    Pembayaran.findAndCountAll({ where, include: includeOpts, order, limit, offset }),
+  ]);
+  const totalPages = Math.ceil(count / limit);
+  res.render('laporan/pembayaran', { currentPage: 'laporan', pembayaranList, total: total || 0, dari, sampai, count, totalPages, page: parseInt(page), limit });
 });
 
 // Laporan pelanggan
 router.get('/pelanggan', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer'), async (req, res) => {
-  const { export: doExport } = req.query;
-  const pelangganList = await Pelanggan.findAll({
-    include: [{ model: KategoriPelanggan, as: 'kategori' }, { model: Rute, as: 'rute' }],
-    order: [['no_pelanggan', 'ASC']],
-  });
+  const { export: doExport, page = 1 } = req.query;
+  const limit = 25;
+  const offset = (parseInt(page) - 1) * limit;
+  const includeOpts = [{ model: KategoriPelanggan, as: 'kategori' }, { model: Rute, as: 'rute' }];
+  const order = [['no_pelanggan', 'ASC']];
 
   if (doExport === 'excel') {
-    return exportPelangganExcel(res, pelangganList);
+    const allData = await Pelanggan.findAll({ include: includeOpts, order });
+    return exportPelangganExcel(res, allData);
   }
 
-  res.render('laporan/pelanggan', { currentPage: 'laporan', pelangganList });
+  const { rows: pelangganList, count } = await Pelanggan.findAndCountAll({ include: includeOpts, order, limit, offset, distinct: true });
+  const totalPages = Math.ceil(count / limit);
+  res.render('laporan/pelanggan', { currentPage: 'laporan', pelangganList, count, totalPages, page: parseInt(page), limit });
 });
 
 // Laporan tagihan per periode
 router.get('/tagihan', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer', 'kasir'), async (req, res) => {
-  const { periode_id, export: doExport } = req.query;
+  const { periode_id, export: doExport, page = 1 } = req.query;
+  const limit = 25;
+  const offset = (parseInt(page) - 1) * limit;
   const where = {};
   if (periode_id) where.periode_id = periode_id;
-
-  const tagihanList = await Tagihan.findAll({
-    where,
-    include: [{ model: Pelanggan, as: 'pelanggan' }, { model: PeriodeBaca, as: 'periode' }],
-    order: [['createdAt', 'DESC']],
-  });
+  const includeOpts = [{ model: Pelanggan, as: 'pelanggan' }, { model: PeriodeBaca, as: 'periode' }];
+  const order = [['createdAt', 'DESC']];
 
   if (doExport === 'excel') {
-    return exportTagihanExcel(res, tagihanList);
+    const allData = await Tagihan.findAll({ where, include: includeOpts, order });
+    return exportTagihanExcel(res, allData);
   }
 
+  const [{ rows: tagihanList, count }, sumTotal, sumLunas, sumBelum] = await Promise.all([
+    Tagihan.findAndCountAll({ where, include: includeOpts, order, limit, offset }),
+    Tagihan.sum('total_tagihan', { where }),
+    Tagihan.sum('total_tagihan', { where: { ...where, status: 'lunas' } }),
+    Tagihan.sum('total_tagihan', { where: { ...where, status: { [Op.in]: ['final', 'terlambat'] } } }),
+  ]);
+  const summary = { total: sumTotal || 0, lunas: sumLunas || 0, belum: sumBelum || 0 };
+  const totalPages = Math.ceil(count / limit);
   const periodeList = await PeriodeBaca.findAll({ order: [['tahun', 'DESC'], ['bulan', 'DESC']] });
-  const summary = {
-    total: tagihanList.reduce((s, t) => s + parseFloat(t.total_tagihan || 0), 0),
-    lunas: tagihanList.filter(t => t.status === 'lunas').reduce((s, t) => s + parseFloat(t.total_tagihan || 0), 0),
-    belum: tagihanList.filter(t => t.status !== 'lunas' && t.status !== 'dibatalkan').reduce((s, t) => s + parseFloat(t.total_tagihan || 0), 0),
-  };
-
-  res.render('laporan/tagihan', { currentPage: 'laporan', tagihanList, periodeList, summary, periode_id });
+  res.render('laporan/tagihan', { currentPage: 'laporan', tagihanList, periodeList, summary, periode_id, count, totalPages, page: parseInt(page), limit });
 });
 
 // === Excel Export Helpers ===
