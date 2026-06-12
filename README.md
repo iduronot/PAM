@@ -1,6 +1,6 @@
 # PAMSIMAS — Sistem Manajemen Air Minum
 
-Aplikasi manajemen PAM (Perusahaan Air Minum) berbasis web untuk mengelola pelanggan, pencatatan meter, tagihan, dan pembayaran.
+Aplikasi manajemen PAM (Perusahaan Air Minum) berbasis web untuk mengelola pelanggan, pencatatan meter, tagihan, pembayaran, dan pelaporan keuangan transparan.
 
 ## Teknologi
 
@@ -13,13 +13,17 @@ Aplikasi manajemen PAM (Perusahaan Air Minum) berbasis web untuk mengelola pelan
 
 - **RBAC 6 Role** — super_admin, admin_pam, petugas_meter, kasir, manajer, pelanggan
 - **Manajemen Pelanggan** — data pelanggan, kategori, rute pembacaan
-- **Baca Meter** — pencatatan per periode, verifikasi, foto meter
+- **Baca Meter** — pencatatan per periode, verifikasi, foto meter, pencarian nama pelanggan
 - **Tagihan** — generate otomatis dari hasil baca meter, tarif flat rate per m³
 - **Pembayaran** — catat pembayaran tunai/transfer, cetak bukti
 - **Alur Lapangan** — petugas catat meter → langsung bayar di tempat
 - **Pengaduan** — tracking tiket pengaduan pelanggan
+- **Pemasukan Lain** — catat hibah/donasi dari desa, kecamatan, pemerintah, dll.
+- **Pengeluaran** — catat pengeluaran operasional per kategori
 - **Laporan** — tunggakan, pembayaran, pelanggan, tagihan (export Excel)
+- **Dashboard Publik** — transparansi keuangan dengan kode akses, mencakup iuran air + hibah/donasi
 - **Portal Pelanggan** — cek tagihan & riwayat bayar mandiri
+- **Ganti Password Mandiri** — semua akun bisa ubah password sendiri
 - **Audit Log** — semua aksi tercatat
 
 ## Instalasi
@@ -97,8 +101,8 @@ pamsimas/
 ├── config/          # Konfigurasi database
 ├── helpers/         # Format angka, audit log
 ├── middleware/       # Auth, role guard
-├── models/          # Sequelize models (14 model)
-├── routes/          # Express routes (12 modul)
+├── models/          # Sequelize models
+├── routes/          # Express routes
 ├── seeders/         # Data awal
 ├── views/           # EJS templates
 │   ├── partials/    # Header, sidebar, topbar
@@ -107,7 +111,10 @@ pamsimas/
 │   ├── tagihan/
 │   ├── pembayaran/
 │   ├── pengaduan/
+│   ├── pemasukan/
+│   ├── pengeluaran/
 │   ├── laporan/
+│   ├── publik/
 │   └── portal/
 ├── public/          # CSS, JS, upload foto
 ├── .env             # Konfigurasi (tidak di-commit)
@@ -135,6 +142,16 @@ Input Baca Meter  →  klik "Simpan & Langsung Bayar"
   → redirect ke form pembayaran
   → simpan & cetak bukti
 ```
+
+## Dashboard Publik
+
+Akses di `/publik` menggunakan kode yang dapat diatur di menu Pengaturan.
+Menampilkan laporan keuangan transparan: pemasukan iuran air + hibah/donasi,
+pengeluaran per kategori, tren 6 bulan, dan saldo keseluruhan organisasi.
+
+---
+
+Dikembangkan penuh semangat oleh **Idur Onotrah** — support by gudangtechno, gigaboot & amanna
 
 ## Lisensi
 
