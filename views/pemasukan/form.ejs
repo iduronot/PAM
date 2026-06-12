@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: mode === 'tambah' ? 'Tambah Pemasukan' : 'Edit Pemasukan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+    <div class="page-header">
+      <h1 class="page-title"><%= mode === 'tambah' ? 'Tambah Pemasukan Lain-lain' : 'Edit Pemasukan' %></h1>
+      <a href="/pemasukan" class="btn btn-secondary">Kembali</a>
+    </div>
+    <div class="card" style="max-width:560px;">
+      <% if (mode === 'edit') { %>
+      <div style="background:var(--sub-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--muted);">
+        No. Pemasukan: <strong style="color:var(--primary)"><%= data.no_pemasukan %></strong>
+      </div>
+      <% } %>
+      <form method="POST" action="/pemasukan/<%= mode === 'edit' ? data.id + '/edit' : 'tambah' %>">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tanggal *</label>
+            <input type="date" name="tanggal" class="form-control" value="<%= data.tanggal || new Date().toISOString().slice(0,10) %>" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Metode Penerimaan</label>
+            <select name="metode_terima" class="form-control">
+              <option value="tunai" <%=data.metode_terima==='tunai'?'selected':''%>>Tunai</option>
+              <option value="transfer" <%=data.metode_terima==='transfer'?'selected':''%>>Transfer Bank</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kategori *</label>
+          <select name="kategori" class="form-control" required>
+            <option value="">-- Pilih Kategori --</option>
+            <% Object.entries(LABEL_KATEGORI).forEach(([k,v]) => { %>
+            <option value="<%= k %>" <%=data.kategori===k?'selected':''%>><%= v %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sumber / Pemberi *</label>
+          <input type="text" name="sumber" class="form-control" value="<%= data.sumber||'' %>" placeholder="cth: Desa Sukamaju, Kec. Cimahi, Donatur Anonim..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Keterangan</label>
+          <input type="text" name="keterangan" class="form-control" value="<%= data.keterangan||'' %>" placeholder="cth: Dana hibah pengembangan jaringan pipa 2025">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jumlah (Rp) *</label>
+          <input type="number" name="jumlah" class="form-control" value="<%= data.jumlah||'' %>" min="0" step="1000" placeholder="0" required oninput="previewRupiah(this.value)">
+          <div id="rupiahPreview" style="margin-top:6px;font-size:13px;font-weight:700;color:var(--success);"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catatan Tambahan</label>
+          <textarea name="catatan" class="form-control" rows="3" placeholder="Nomor surat, tanggal SK, kondisi khusus, dll."><%= data.catatan||'' %></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+          <a href="/pemasukan" class="btn btn-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function previewRupiah(val) {
+  const el = document.getElementById('rupiahPreview');
+  const num = parseInt(val) || 0;
+  el.textContent = num > 0 ? new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(num) : '';
+}
+<% if (data.jumlah) { %>previewRupiah(<%= data.jumlah %>);<% } %>
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ const Pengaduan = require('./Pengaduan');
 const PengaduanLog = require('./PengaduanLog');
 const AuditLog = require('./AuditLog');
 const Pengeluaran = require('./Pengeluaran');
+const Pemasukan = require('./Pemasukan');
 const AppSetting = require('./AppSetting');
 
 // User - Pelanggan (untuk role pelanggan)
@@ -81,9 +82,12 @@ AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 // Pengeluaran
 Pengeluaran.belongsTo(User, { foreignKey: 'created_by', as: 'pencatat' });
 
+// Pemasukan
+Pemasukan.belongsTo(User, { foreignKey: 'created_by', as: 'pencatat' });
+
 module.exports = {
   sequelize,
   User, Rute, KategoriPelanggan, Pelanggan, Meter,
   Tarif, PeriodeBaca, PencatatanMeter, Tagihan,
-  Pembayaran, Pengaduan, PengaduanLog, AuditLog, Pengeluaran, AppSetting,
+  Pembayaran, Pengaduan, PengaduanLog, AuditLog, Pengeluaran, Pemasukan, AppSetting,
 };

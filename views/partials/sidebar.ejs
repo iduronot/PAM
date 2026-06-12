@@ -67,6 +67,10 @@
 
       <% if (['super_admin','admin_pam','manajer'].includes(user && user.role)) { %>
       <div class="nav-section">Keuangan</div>
+      <a href="/pemasukan" class="nav-item <%= currentPage === 'pemasukan' ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        Pemasukan Lain
+      </a>
       <a href="/pengeluaran" class="nav-item <%= currentPage === 'pengeluaran' ? 'active' : '' %>">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         Pengeluaran

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireLogin, requireNotPelanggan } = require('../middleware/auth');
-const { Pelanggan, Tagihan, Pembayaran, Pengaduan, PencatatanMeter, PeriodeBaca, Pengeluaran } = require('../models');
+const { Pelanggan, Tagihan, Pembayaran, Pengaduan, PencatatanMeter, PeriodeBaca, Pengeluaran, Pemasukan } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -21,6 +21,7 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       pengaduanBaru, pengaduanBelumSelesai,
       pemasukanBulanIni, pengeluaranBulanIni,
       pemasukanTotal, pengeluaranTotal,
+      hibahBulanIni, hibahTotal,
     ] = await Promise.all([
       Pelanggan.count({ where: { status: 'aktif' } }),
       Pelanggan.count({ where: { status: { [Op.in]: ['nonaktif', 'putus_sementara', 'putus_permanen'] } } }),
@@ -33,6 +34,8 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalBulan.toISOString().slice(0,10), [Op.lt]: awalBulanDepan.toISOString().slice(0,10) } } }),
       Pembayaran.sum('jumlah_bayar'),
       Pengeluaran.sum('jumlah'),
+      Pemasukan.sum('jumlah', { where: { tanggal: { [Op.gte]: awalBulan.toISOString().slice(0,10), [Op.lt]: awalBulanDepan.toISOString().slice(0,10) } } }),
+      Pemasukan.sum('jumlah'),
     ]);
 
     const totalTunggakan = await Tagihan.sum('total_tagihan', {
@@ -63,17 +66,20 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       const akhir = new Date(thn, bln, 1);
       const awalStr = awal.toISOString().slice(0, 10);
       const akhirStr = akhir.toISOString().slice(0, 10);
-      const [total, lunas, keluar] = await Promise.all([
+      const [total, lunas, keluar, hibah] = await Promise.all([
         Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
         Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
         Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } } }),
+        Pemasukan.sum('jumlah', { where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } } }),
       ]);
       const namaBln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][bln - 1];
-      chartData.push({ label: `${namaBln} ${thn}`, total: total || 0, lunas: lunas || 0, keluar: keluar || 0 });
+      chartData.push({ label: `${namaBln} ${thn}`, total: total || 0, lunas: (lunas || 0) + (hibah || 0), keluar: keluar || 0 });
     }
 
-    const saldoTotal = (pemasukanTotal || 0) - (pengeluaranTotal || 0);
-    const saldoBulanIni = (pemasukanBulanIni || 0) - (pengeluaranBulanIni || 0);
+    const totalPemasukanBulanIni = (pemasukanBulanIni || 0) + (hibahBulanIni || 0);
+    const totalPemasukanTotal = (pemasukanTotal || 0) + (hibahTotal || 0);
+    const saldoTotal = totalPemasukanTotal - (pengeluaranTotal || 0);
+    const saldoBulanIni = totalPemasukanBulanIni - (pengeluaranBulanIni || 0);
 
     res.render('dashboard/index', {
       currentPage: 'dashboard',
@@ -83,10 +89,11 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       totalTunggakan: totalTunggakan || 0,
       pelangganMenunggak,
       pengaduanBaru, pengaduanBelumSelesai,
-      pemasukanBulanIni: pemasukanBulanIni || 0,
+      pemasukanBulanIni: totalPemasukanBulanIni,
+      hibahBulanIni: hibahBulanIni || 0,
       pengeluaranBulanIni: pengeluaranBulanIni || 0,
       saldoBulanIni,
-      pemasukanTotal: pemasukanTotal || 0,
+      pemasukanTotal: totalPemasukanTotal,
       pengeluaranTotal: pengeluaranTotal || 0,
       saldoTotal,
       progressBaca, periodeAktif,

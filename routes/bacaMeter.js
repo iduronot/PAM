@@ -86,21 +86,26 @@ router.get('/periode/:periodeId', requireLogin, requireRole('super_admin', 'admi
   const periode = await PeriodeBaca.findByPk(req.params.periodeId);
   if (!periode) { req.flash('error', 'Periode tidak ditemukan'); return res.redirect('/baca-meter'); }
 
-  const { rute_id, status, page = 1 } = req.query;
+  const { rute_id, status, q, page = 1 } = req.query;
   const limit = 25;
   const offset = (parseInt(page) - 1) * limit;
   const where = { periode_id: periode.id };
   if (status) where.status = status;
 
+  const pelangganWhere = {};
+  if (rute_id) pelangganWhere.rute_id = rute_id;
+  if (q && q.trim()) pelangganWhere[Op.or] = [
+    { nama: { [Op.like]: `%${q.trim()}%` } },
+    { no_pelanggan: { [Op.like]: `%${q.trim()}%` } },
+  ];
+  const hasPelangganFilter = Object.keys(pelangganWhere).length > 0;
+  const pelangganInclude = { model: Pelanggan, as: 'pelanggan', include: [{ model: Rute, as: 'rute' }], where: hasPelangganFilter ? pelangganWhere : undefined, required: hasPelangganFilter };
+
   const [rowCount, pencatatanList, ruteList, statsTotal, statsTerbaca, statsBelum, statsAnomali, statsVerified] = await Promise.all([
-    PencatatanMeter.count({ where, include: rute_id ? [{ model: Pelanggan, as: 'pelanggan', where: { rute_id } }] : [] }),
+    PencatatanMeter.count({ where, include: hasPelangganFilter ? [{ model: Pelanggan, as: 'pelanggan', where: pelangganWhere, required: true }] : [] }),
     PencatatanMeter.findAll({
       where,
-      include: [
-        { model: Pelanggan, as: 'pelanggan', include: [{ model: Rute, as: 'rute' }], where: rute_id ? { rute_id } : undefined },
-        { model: Meter, as: 'meter' },
-        { model: User, as: 'petugas' },
-      ],
+      include: [pelangganInclude, { model: Meter, as: 'meter' }, { model: User, as: 'petugas' }],
       order: [[{ model: Pelanggan, as: 'pelanggan' }, 'no_pelanggan', 'ASC']],
       limit, offset,
     }),
@@ -115,7 +120,7 @@ router.get('/periode/:periodeId', requireLogin, requireRole('super_admin', 'admi
   const stats = { total: statsTotal, terbaca: statsTerbaca, belum: statsBelum, anomali: statsAnomali, verified: statsVerified };
   const totalPages = Math.ceil(rowCount / limit);
 
-  res.render('baca_meter/detail_periode', { currentPage: 'baca_meter', periode, pencatatanList, ruteList, stats, rute_id, status, rowCount, totalPages, page: parseInt(page), limit });
+  res.render('baca_meter/detail_periode', { currentPage: 'baca_meter', periode, pencatatanList, ruteList, stats, rute_id, status, q: q || '', rowCount, totalPages, page: parseInt(page), limit });
 });
 
 // Form input baca meter
