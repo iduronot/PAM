@@ -13,10 +13,10 @@
       --bg: #0f172a; --card: #1e293b; --border: rgba(255,255,255,.08);
       --text: #f1f5f9; --muted: #94a3b8; --sub-bg: rgba(255,255,255,.04);
       --green: #10b981; --red: #ef4444; --blue: #0ea5e9; --yellow: #f59e0b;
+      --purple: #8b5cf6;
     }
     body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* Header */
     .header {
       background: linear-gradient(135deg, #0f172a, #1e3a5f);
       border-bottom: 1px solid var(--border);
@@ -31,10 +31,8 @@
     .btn-keluar { background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 12px; cursor: pointer; text-decoration: none; transition: .15s; }
     .btn-keluar:hover { background: rgba(255,255,255,.1); color: var(--text); }
 
-    /* Content */
     .content { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
 
-    /* Filter */
     .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
     select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 13px; cursor: pointer; }
     .btn { padding: 8px 18px; border-radius: 8px; font-family: 'Outfit',sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: .15s; }
@@ -43,16 +41,19 @@
     .period-label { font-size: 13px; color: var(--muted); }
     .period-label strong { color: var(--text); }
 
-    /* Cards */
     .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 16px; }
     .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 16px; }
-    @media(max-width:640px) { .grid-3,.grid-2 { grid-template-columns: 1fr; } }
+    @media(max-width:700px) { .grid-3,.grid-2 { grid-template-columns: 1fr; } }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
     .card-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px; }
     .stat-big { font-size: 26px; font-weight: 800; line-height: 1; }
     .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
-    /* Neraca card */
+    /* Breakdown chips dalam stat card */
+    .breakdown-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .breakdown-chip { display: flex; align-items: center; gap: 5px; background: var(--sub-bg); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
     .neraca-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
     .neraca-item { padding: 20px; text-align: center; }
     .neraca-item + .neraca-item { border-left: 1px solid var(--border); }
@@ -61,7 +62,6 @@
     .neraca-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
     @media(max-width:640px) { .neraca-grid { grid-template-columns: 1fr; } .neraca-item + .neraca-item { border-left: none; border-top: 1px solid var(--border); } }
 
-    /* Table */
     table { width: 100%; border-collapse: collapse; }
     th { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
     td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
@@ -70,19 +70,17 @@
     .badge-green { background: rgba(16,185,129,.15); color: #6ee7b7; }
     .badge-orange { background: rgba(245,158,11,.15); color: #fcd34d; }
     .badge-blue { background: rgba(14,165,233,.15); color: #7dd3fc; }
+    .badge-purple { background: rgba(139,92,246,.15); color: #c4b5fd; }
     .badge-muted { background: rgba(148,163,184,.12); color: var(--muted); }
 
-    /* Footer */
     .pub-footer { text-align: center; padding: 28px; font-size: 12px; color: #475569; border-top: 1px solid var(--border); margin-top: 16px; }
 
-    /* Progress bar */
     .progress-wrap { background: rgba(255,255,255,.06); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
     .progress-bar { height: 100%; border-radius: 4px; }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
   <div class="header-left">
     <div class="logo">💧</div>
@@ -125,7 +123,27 @@
       <div class="stat-big" style="color:var(--green);">
         Rp <%= pemasukanBulan.toLocaleString('id-ID') %>
       </div>
-      <div class="stat-sub">dari pembayaran iuran air</div>
+      <div class="stat-sub">
+        <% if (hibahBulan > 0) { %>
+          Iuran air + hibah/donasi
+        <% } else { %>
+          dari pembayaran iuran air
+        <% } %>
+      </div>
+      <% if (hibahBulan > 0) { %>
+      <div class="breakdown-row">
+        <div class="breakdown-chip">
+          <div class="chip-dot" style="background:var(--green);"></div>
+          <span style="color:var(--muted);">Iuran:</span>
+          <strong>Rp <%= iuranBulan.toLocaleString('id-ID') %></strong>
+        </div>
+        <div class="breakdown-chip">
+          <div class="chip-dot" style="background:var(--blue);"></div>
+          <span style="color:var(--muted);">Hibah:</span>
+          <strong>Rp <%= hibahBulan.toLocaleString('id-ID') %></strong>
+        </div>
+      </div>
+      <% } %>
     </div>
     <div class="card" style="border-top:3px solid var(--red);">
       <div class="card-title">Pengeluaran Bulan Ini</div>
@@ -150,7 +168,7 @@
       <div class="neraca-item">
         <div class="neraca-label">Total Pemasukan</div>
         <div class="neraca-value" style="color:var(--green);">Rp <%= pemasukanTotal.toLocaleString('id-ID') %></div>
-        <div class="neraca-note">sejak awal operasi</div>
+        <div class="neraca-note">iuran air + hibah/donasi</div>
       </div>
       <div class="neraca-item">
         <div class="neraca-label">Total Pengeluaran</div>
@@ -170,41 +188,80 @@
   <!-- Chart + Rincian Pengeluaran -->
   <div class="grid-2">
 
-    <!-- Chart -->
     <div class="card">
       <div class="card-title">Tren 6 Bulan Terakhir</div>
       <canvas id="chartKeuangan" height="200"></canvas>
     </div>
 
-    <!-- Rincian pengeluaran bulan ini -->
     <div class="card">
       <div class="card-title">Rincian Pengeluaran Bulan Ini</div>
       <% if (pengeluaranDetail.length === 0) { %>
         <p style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0;">Tidak ada pengeluaran bulan ini</p>
       <% } else { %>
-        <% const totalBulan = pengeluaranDetail.reduce((s,p) => s + parseFloat(p.jumlah), 0); %>
+        <% const totalPengeluaranBulan = pengeluaranDetail.reduce((s,p) => s + parseFloat(p.jumlah), 0); %>
         <% pengeluaranDetail.forEach(p => { %>
         <div style="margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
             <div>
               <span style="font-size:13px;font-weight:600;"><%= p.keterangan %></span>
-              <span class="badge badge-<%= {operasional:'blue',pemeliharaan:'orange',gaji:'green',utilitas:'muted',perlengkapan:'muted',lain_lain:'muted'}[p.kategori]||'muted' %>" style="margin-left:6px;font-size:10px;"><%= LABEL_KATEGORI[p.kategori]||p.kategori %></span>
+              <span class="badge badge-<%= {operasional:'blue',pemeliharaan:'orange',gaji:'green',utilitas:'muted',perlengkapan:'muted',lain_lain:'muted'}[p.kategori]||'muted' %>" style="margin-left:6px;font-size:10px;"><%= LABEL_KATEGORI_PENGELUARAN[p.kategori]||p.kategori %></span>
             </div>
             <span style="font-size:13px;font-weight:700;color:var(--red);">Rp <%= parseFloat(p.jumlah).toLocaleString('id-ID') %></span>
           </div>
           <div class="progress-wrap">
-            <div class="progress-bar" style="width:<%= totalBulan > 0 ? Math.round(parseFloat(p.jumlah)/totalBulan*100) : 0 %>%;background:<%= {operasional:'var(--blue)',pemeliharaan:'var(--yellow)',gaji:'var(--green)',utilitas:'#8b5cf6',perlengkapan:'#ec4899',lain_lain:'var(--muted)'}[p.kategori]||'var(--muted)' %>;"></div>
+            <div class="progress-bar" style="width:<%= totalPengeluaranBulan > 0 ? Math.round(parseFloat(p.jumlah)/totalPengeluaranBulan*100) : 0 %>%;background:<%= {operasional:'var(--blue)',pemeliharaan:'var(--yellow)',gaji:'var(--green)',utilitas:'#8b5cf6',perlengkapan:'#ec4899',lain_lain:'var(--muted)'}[p.kategori]||'var(--muted)' %>;"></div>
           </div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;"><%= p.metode_bayar %> &bull; <%= formatTanggal ? formatTanggal(p.tanggal) : p.tanggal %></div>
         </div>
         <% }) %>
         <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
           <span style="color:var(--muted);">Total</span>
-          <span style="color:var(--red);">Rp <%= totalBulan.toLocaleString('id-ID') %></span>
+          <span style="color:var(--red);">Rp <%= totalPengeluaranBulan.toLocaleString('id-ID') %></span>
         </div>
       <% } %>
     </div>
   </div>
+
+  <!-- Rincian Pemasukan Lain (hibah/donasi) bulan ini -->
+  <% if (pemasukanDetail.length > 0) { %>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Rincian Pemasukan Lain Bulan Ini</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Sumber / Pemberi</th>
+          <th>Keterangan</th>
+          <th>Kategori</th>
+          <th style="text-align:right;">Jumlah</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% pemasukanDetail.forEach(p => { %>
+        <tr>
+          <td style="white-space:nowrap;color:var(--muted);"><%= formatTanggal ? formatTanggal(p.tanggal) : p.tanggal %></td>
+          <td style="font-weight:600;"><%= p.sumber %></td>
+          <td style="color:var(--muted);font-size:12px;"><%= p.keterangan || '-' %></td>
+          <td>
+            <span class="badge badge-<%= {hibah_desa:'green',hibah_kecamatan:'blue',hibah_pemerintah:'blue',donasi:'purple',retribusi:'orange',lain_lain:'muted'}[p.kategori]||'muted' %>">
+              <%= LABEL_KATEGORI_PEMASUKAN[p.kategori]||p.kategori %>
+            </span>
+          </td>
+          <td style="text-align:right;font-weight:700;color:var(--green);">Rp <%= parseFloat(p.jumlah).toLocaleString('id-ID') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" style="font-weight:700;color:var(--muted);border-top:1px solid var(--border);">Total Pemasukan Lain</td>
+          <td style="text-align:right;font-weight:800;color:var(--green);border-top:1px solid var(--border);">
+            Rp <%= pemasukanDetail.reduce((s,p) => s + parseFloat(p.jumlah), 0).toLocaleString('id-ID') %>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <% } %>
 
   <!-- Info pelanggan -->
   <div class="card" style="text-align:center;padding:16px;">
@@ -215,7 +272,6 @@
 
 </div>
 
-<!-- Footer -->
 <div class="pub-footer">
   Data diperbarui secara real-time &bull; <%= namaOrganisasi %> &bull;
   Halaman ini hanya dapat diakses dengan kode resmi dari pengurus PAM
