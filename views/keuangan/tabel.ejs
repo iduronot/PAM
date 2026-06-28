@@ -8,7 +8,7 @@
   <div class="content">
     <%- include('../partials/flash') %>
 
-    <!-- Filter tahun -->
+    <!-- Header + filter tahun -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
       <div>
         <h2 style="font-size:18px;font-weight:700;margin:0;">Rekap Keuangan Bulanan</h2>
@@ -29,13 +29,13 @@
       let totBeban=0, totAir=0, totKubik=0, totHibah=0, totMasuk=0, totKeluar=0, totSaldo=0;
       let totKelAbodemen=0, totKelAir=0, totKelHibah=0, totKelLain=0;
       tabelBulanan.forEach(r => {
-        totBeban      += r.bebanBulanan;
-        totAir        += r.biayaAir;
-        totKubik      += r.kubik;
-        totHibah      += r.hibah;
-        totMasuk      += r.totalMasuk;
-        totKeluar     += r.pengeluaran;
-        totSaldo      += r.saldo;
+        totBeban       += r.bebanBulanan;
+        totAir         += r.biayaAir;
+        totKubik       += r.kubik;
+        totHibah       += r.hibah;
+        totMasuk       += r.totalMasuk;
+        totKeluar      += r.pengeluaran;
+        totSaldo       += r.saldo;
         totKelAbodemen += r.keluarAbodemen;
         totKelAir      += r.keluarAir;
         totKelHibah    += r.keluarHibah;
@@ -65,34 +65,41 @@
       </div>
     </div>
 
-    <!-- Tabel utama -->
-    <div class="card" style="padding:20px;">
-      <div style="overflow-x:auto;">
+    <!-- Tabel dengan Tab -->
+    <div class="card" style="padding:0;overflow:hidden;">
+
+      <!-- Tab header -->
+      <div style="display:flex;border-bottom:2px solid var(--border);">
+        <button id="tab-masuk" onclick="switchTab('masuk')"
+          style="padding:14px 24px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;background:transparent;color:var(--primary);">
+          📥 Pemasukan
+        </button>
+        <button id="tab-keluar" onclick="switchTab('keluar')"
+          style="padding:14px 24px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;color:var(--muted);">
+          📤 Pengeluaran per Dana
+        </button>
+      </div>
+
+      <!-- Panel Pemasukan -->
+      <div id="panel-masuk" style="overflow-x:auto;padding:0;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
-            <% const thBase = 'padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;'; %>
             <tr style="background:var(--sub-bg);">
-              <th rowspan="2" style="<%= thBase %>text-align:left;color:var(--muted);">No</th>
-              <th rowspan="2" style="<%= thBase %>text-align:left;color:var(--muted);">Bulan</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--primary);">Beban Bulanan</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--success);">Biaya Air</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--muted);">Kubik (m³)</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:#8b5cf6;">Hibah</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--success);">Total Masuk</th>
-              <th colspan="4" style="<%= thBase %>text-align:center;color:var(--danger);border-left:2px solid rgba(239,68,68,.25);">Pengeluaran per Sumber Dana</th>
-              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--muted);">Saldo</th>
-            </tr>
-            <tr style="background:var(--sub-bg);">
-              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--primary);border-bottom:2px solid var(--border);white-space:nowrap;border-left:2px solid rgba(239,68,68,.25);">Abodemen</th>
-              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--success);border-bottom:2px solid var(--border);white-space:nowrap;">Pemakaian Air</th>
-              <th style="padding:6px 12px;font-size:10px;text-align:right;color:#8b5cf6;border-bottom:2px solid var(--border);white-space:nowrap;">Hibah</th>
-              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--danger);border-bottom:2px solid var(--border);white-space:nowrap;font-weight:700;">Total</th>
+              <% const th = 'padding:11px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;'; %>
+              <th style="<%= th %>text-align:left;color:var(--muted);width:40px;">No</th>
+              <th style="<%= th %>text-align:left;color:var(--muted);">Bulan</th>
+              <th style="<%= th %>text-align:right;color:var(--primary);">Beban Bulanan</th>
+              <th style="<%= th %>text-align:right;color:var(--success);">Biaya Pemakaian Air</th>
+              <th style="<%= th %>text-align:right;color:var(--muted);">Kubik (m³)</th>
+              <th style="<%= th %>text-align:right;color:#8b5cf6;">Hibah / Donasi</th>
+              <th style="<%= th %>text-align:right;color:var(--success);">Total Masuk</th>
             </tr>
           </thead>
           <tbody>
             <% tabelBulanan.forEach((row, idx) => { %>
-            <tr style="border-bottom:1px solid rgba(255,255,255,.05);<%= !row.adaData ? 'opacity:.35;' : '' %>" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
-              <td style="padding:11px 14px;color:var(--muted);font-size:12px;"><%= idx + 1 %></td>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);<%= !row.adaData ? 'opacity:.35;' : '' %>"
+                onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
+              <td style="padding:11px 14px;color:var(--muted);font-size:12px;"><%= idx+1 %></td>
               <td style="padding:11px 14px;font-weight:600;white-space:nowrap;"><%= row.namaBulan %> <%= tahun %></td>
               <td style="padding:11px 14px;text-align:right;color:var(--primary);font-weight:600;">
                 <%- row.bebanBulanan > 0 ? formatRupiah(row.bebanBulanan) : '<span style="color:var(--muted)">—</span>' %>
@@ -109,24 +116,6 @@
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--success);">
                 <%- row.totalMasuk > 0 ? formatRupiah(row.totalMasuk) : '<span style="color:var(--muted)">—</span>' %>
               </td>
-              <td style="padding:11px 12px;text-align:right;color:var(--primary);border-left:2px solid rgba(239,68,68,.15);">
-                <%- row.keluarAbodemen > 0 ? formatRupiah(row.keluarAbodemen) : '<span style="color:var(--muted)">—</span>' %>
-              </td>
-              <td style="padding:11px 12px;text-align:right;color:var(--success);">
-                <%- row.keluarAir > 0 ? formatRupiah(row.keluarAir) : '<span style="color:var(--muted)">—</span>' %>
-              </td>
-              <td style="padding:11px 12px;text-align:right;color:#8b5cf6;">
-                <%- row.keluarHibah > 0 ? formatRupiah(row.keluarHibah) : '<span style="color:var(--muted)">—</span>' %>
-              </td>
-              <td style="padding:11px 12px;text-align:right;font-weight:700;color:var(--danger);">
-                <%- row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
-                <% if (row.keluarLain > 0) { %>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px;">+<%= formatRupiah(row.keluarLain) %> tdk ditentukan</div>
-                <% } %>
-              </td>
-              <td style="padding:11px 14px;text-align:right;font-weight:700;color:<%= row.saldo > 0 ? 'var(--success)' : row.saldo < 0 ? 'var(--danger)' : 'var(--muted)' %>;">
-                <% if (row.adaData) { %><%= row.saldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(row.saldo)) %><% } else { %>—<% } %>
-              </td>
             </tr>
             <% }) %>
           </tbody>
@@ -138,10 +127,61 @@
               <td style="padding:12px 14px;text-align:right;font-weight:700;color:var(--muted);"><%= totKubik.toLocaleString('id-ID',{maximumFractionDigits:1}) %> m³</td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totHibah) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totMasuk) %></td>
-              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--primary);border-left:2px solid rgba(239,68,68,.25);"><%= formatRupiah(totKelAbodemen) %></td>
-              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totKelAir) %></td>
-              <td style="padding:12px 12px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totKelHibah) %></td>
-              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--danger);"><%= formatRupiah(totKeluar) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Panel Pengeluaran per Dana -->
+      <div id="panel-keluar" style="display:none;overflow-x:auto;padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--sub-bg);">
+              <th style="<%= th %>text-align:left;color:var(--muted);width:40px;">No</th>
+              <th style="<%= th %>text-align:left;color:var(--muted);">Bulan</th>
+              <th style="<%= th %>text-align:right;color:var(--primary);">Dari Abodemen</th>
+              <th style="<%= th %>text-align:right;color:var(--success);">Dari Pemakaian Air</th>
+              <th style="<%= th %>text-align:right;color:#8b5cf6;">Dari Hibah</th>
+              <th style="<%= th %>text-align:right;color:var(--muted);">Tdk Ditentukan</th>
+              <th style="<%= th %>text-align:right;color:var(--danger);">Total Keluar</th>
+              <th style="<%= th %>text-align:right;color:var(--muted);">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% tabelBulanan.forEach((row, idx) => { %>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);<%= !row.adaData ? 'opacity:.35;' : '' %>"
+                onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
+              <td style="padding:11px 14px;color:var(--muted);font-size:12px;"><%= idx+1 %></td>
+              <td style="padding:11px 14px;font-weight:600;white-space:nowrap;"><%= row.namaBulan %> <%= tahun %></td>
+              <td style="padding:11px 14px;text-align:right;color:var(--primary);">
+                <%- row.keluarAbodemen > 0 ? formatRupiah(row.keluarAbodemen) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 14px;text-align:right;color:var(--success);">
+                <%- row.keluarAir > 0 ? formatRupiah(row.keluarAir) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 14px;text-align:right;color:#8b5cf6;">
+                <%- row.keluarHibah > 0 ? formatRupiah(row.keluarHibah) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 14px;text-align:right;color:var(--warning);">
+                <%- row.keluarLain > 0 ? formatRupiah(row.keluarLain) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--danger);">
+                <%- row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 14px;text-align:right;font-weight:700;color:<%= row.saldo > 0 ? 'var(--success)' : row.saldo < 0 ? 'var(--danger)' : 'var(--muted)' %>;">
+                <% if (row.adaData) { %><%= row.saldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(row.saldo)) %><% } else { %>—<% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr style="background:var(--sub-bg);border-top:2px solid var(--border);">
+              <td colspan="2" style="padding:12px 14px;font-weight:800;color:var(--text);font-size:13px;">Total <%= tahun %></td>
+              <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--primary);"><%= formatRupiah(totKelAbodemen) %></td>
+              <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totKelAir) %></td>
+              <td style="padding:12px 14px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totKelHibah) %></td>
+              <td style="padding:12px 14px;text-align:right;font-weight:700;color:var(--warning);"><%= totKelLain > 0 ? formatRupiah(totKelLain) : '—' %></td>
+              <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--danger);"><%= formatRupiah(totKeluar) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:<%= totSaldo >= 0 ? 'var(--success)' : 'var(--danger)' %>;">
                 <%= totSaldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(totSaldo)) %>
               </td>
@@ -149,9 +189,30 @@
           </tfoot>
         </table>
       </div>
-    </div>
+
+    </div><!-- end card -->
 
   </div>
 </div>
+
+<script>
+function switchTab(name) {
+  const panels = ['masuk','keluar'];
+  panels.forEach(p => {
+    document.getElementById('panel-' + p).style.display = p === name ? '' : 'none';
+    const btn = document.getElementById('tab-' + p);
+    if (p === name) {
+      btn.style.borderBottomColor = p === 'masuk' ? 'var(--success)' : 'var(--danger)';
+      btn.style.color = p === 'masuk' ? 'var(--success)' : 'var(--danger)';
+    } else {
+      btn.style.borderBottomColor = 'transparent';
+      btn.style.color = 'var(--muted)';
+    }
+  });
+}
+// set warna tab aktif saat load
+document.getElementById('tab-masuk').style.borderBottomColor = 'var(--success)';
+document.getElementById('tab-masuk').style.color = 'var(--success)';
+</script>
 </body>
 </html>
