@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><%- include('../partials/head') %><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="main">
+  <%- include('../partials/topbar', { pageTitle: 'Ringkasan Keuangan' }) %>
+  <div class="content">
+    <%- include('../partials/flash') %>
+
+    <!-- Filter -->
+    <form method="GET" style="display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+      <select name="bulan" class="form-control" style="width:auto;">
+        <% ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].forEach((b,i) => { %>
+        <option value="<%= i+1 %>" <%=bulan==i+1?'selected':''%>><%= b %></option>
+        <% }) %>
+      </select>
+      <select name="tahun" class="form-control" style="width:auto;">
+        <% for(let y = tahunNow; y >= tahunNow - 3; y--) { %>
+        <option value="<%= y %>" <%=tahun==y?'selected':''%>><%= y %></option>
+        <% } %>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Tampilkan</button>
+      <% if (bulan != bulanNow || tahun != tahunNow) { %>
+      <a href="/keuangan" class="btn btn-secondary btn-sm">Bulan Ini</a>
+      <% } %>
+      <span style="font-size:12px;color:var(--muted);">
+        Periode: <strong style="color:var(--text);">
+          <%= ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][bulan-1] %> <%= tahun %>
+        </strong>
+      </span>
+    </form>
+
+    <%
+      const BULAN_LABEL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][bulan-1] + ' ' + tahun;
+    %>
+
+    <!-- ===== BARIS 1: SALDO NERACA ===== -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="card" style="padding:18px;border-left:4px solid var(--success);">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Total Masuk Bulan Ini</div>
+        <div style="font-size:22px;font-weight:800;color:var(--success);"><%= formatRupiah(totalMasukBulan) %></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">iuran air + hibah/donasi</div>
+      </div>
+      <div class="card" style="padding:18px;border-left:4px solid var(--danger);">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Total Pengeluaran Bulan Ini</div>
+        <div style="font-size:22px;font-weight:800;color:var(--danger);"><%= formatRupiah(pengeluaranBulanTotal) %></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;"><%= pengeluaranPerKategori.length %> kategori pengeluaran</div>
+      </div>
+      <div class="card" style="padding:18px;border-left:4px solid <%= saldoBulan >= 0 ? 'var(--primary)' : 'var(--warning)' %>;background:<%= saldoBulan >= 0 ? 'rgba(14,165,233,.04)' : 'rgba(245,158,11,.04)' %>;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Saldo Bersih Bulan Ini</div>
+        <div style="font-size:22px;font-weight:800;color:<%= saldoBulan >= 0 ? 'var(--primary)' : 'var(--warning)' %>;"><%= saldoBulan < 0 ? '-' : '' %><%= formatRupiah(Math.abs(saldoBulan)) %></div>
+        <div style="font-size:11px;font-weight:700;color:<%= saldoBulan >= 0 ? 'var(--success)' : 'var(--warning)' %>;margin-top:4px;"><%= saldoBulan >= 0 ? '▲ Surplus' : '▼ Defisit' %></div>
+      </div>
+    </div>
+
+    <!-- ===== BARIS 2: KOMPONEN PEMASUKAN ===== -->
+    <div class="card" style="margin-bottom:16px;padding:18px;">
+      <div class="card-header" style="margin-bottom:16px;">
+        <span class="card-title">Rincian Pemasukan — <%= BULAN_LABEL %></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+
+        <!-- Beban Bulanan -->
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid var(--primary);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Beban Bulanan</div>
+          <div style="font-size:19px;font-weight:800;color:var(--primary);"><%= formatRupiah(bebanBulananBulan) %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">abodemen / biaya admin tetap</div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">
+            Total keseluruhan<br><strong style="color:var(--text);font-size:13px;"><%= formatRupiah(bebanBulananTotal) %></strong>
+          </div>
+        </div>
+
+        <!-- Biaya Pemakaian Air -->
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid var(--success);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Biaya Pemakaian Air</div>
+          <div style="font-size:19px;font-weight:800;color:var(--success);"><%= formatRupiah(subtotalAirBulan) %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">pemakaian m³ × harga tarif</div>
+          <div style="margin-top:6px;display:flex;align-items:baseline;gap:4px;">
+            <span style="font-size:18px;font-weight:700;color:var(--primary);"><%= kubikBulan.toLocaleString('id-ID',{maximumFractionDigits:1}) %></span>
+            <span style="font-size:11px;color:var(--muted);">m³ terpakai bulan ini</span>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">
+            Total keseluruhan<br>
+            <strong style="color:var(--text);font-size:13px;"><%= formatRupiah(subtotalAirTotal) %></strong>
+            <span style="color:var(--muted);font-size:11px;"> / <%= kubikTotal.toLocaleString('id-ID',{maximumFractionDigits:0}) %> m³</span>
+          </div>
+        </div>
+
+        <!-- Hibah / Donasi -->
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid #8b5cf6;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Hibah / Donasi</div>
+          <div style="font-size:19px;font-weight:800;color:#8b5cf6;"><%= formatRupiah(hibahBulan) %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;"><%= pemasukanDetail.length %> transaksi bulan ini</div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">
+            Total keseluruhan<br><strong style="color:var(--text);font-size:13px;"><%= formatRupiah(hibahTotal) %></strong>
+          </div>
+        </div>
+
+        <!-- Tagihan Overview -->
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid var(--warning);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Tagihan Bulan Ini</div>
+          <div style="font-size:19px;font-weight:800;color:var(--warning);"><%= formatRupiah(totalTagihanBulan) %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">total ditagihkan</div>
+          <div style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+              <span style="color:var(--success);">Lunas: <%= formatRupiah(totalLunasBulan) %></span>
+              <span style="color:var(--muted);"><%= totalTagihanBulan > 0 ? Math.round(totalLunasBulan/totalTagihanBulan*100) : 0 %>%</span>
+            </div>
+            <div style="background:rgba(255,255,255,.06);border-radius:4px;height:6px;overflow:hidden;">
+              <div style="background:var(--success);height:100%;width:<%= totalTagihanBulan > 0 ? Math.round(totalLunasBulan/totalTagihanBulan*100) : 0 %>%;border-radius:4px;"></div>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">
+            Tunggakan tersisa<br>
+            <strong style="color:var(--danger);font-size:13px;"><%= formatRupiah(totalTagihanBulan - totalLunasBulan) %></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BARIS 3: PENGELUARAN PER KATEGORI + DETAIL ===== -->
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:16px;margin-bottom:16px;">
+
+      <!-- Pie / Breakdown Kategori -->
+      <div class="card" style="padding:18px;">
+        <div class="card-header" style="margin-bottom:16px;">
+          <span class="card-title">Pengeluaran per Kategori</span>
+          <span style="font-size:12px;color:var(--muted);"><%= formatRupiah(pengeluaranBulanTotal) %></span>
+        </div>
+        <% if (pengeluaranPerKategori.length === 0) { %>
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0;">Tidak ada pengeluaran bulan ini</div>
+        <% } else { %>
+          <canvas id="chartPie" height="200" style="margin-bottom:16px;"></canvas>
+          <% pengeluaranPerKategori.forEach(k => { %>
+          <% const pct = pengeluaranBulanTotal > 0 ? Math.round(parseFloat(k.total)/pengeluaranBulanTotal*100) : 0; %>
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:10px;height:10px;border-radius:2px;background:<%= WARNA_PENGELUARAN[k.kategori]||'#94a3b8' %>;flex-shrink:0;"></div>
+                <span style="font-size:12px;font-weight:600;"><%= LABEL_KATEGORI_PENGELUARAN[k.kategori]||k.kategori %></span>
+                <span style="font-size:11px;color:var(--muted);">(<%= k.jumlah_transaksi %> transaksi)</span>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:12px;font-weight:700;color:var(--danger);"><%= formatRupiah(parseFloat(k.total)) %></span>
+                <span style="font-size:11px;color:var(--muted);margin-left:4px;"><%= pct %>%</span>
+              </div>
+            </div>
+            <div style="background:var(--sub-bg);border-radius:3px;height:5px;overflow:hidden;">
+              <div style="background:<%= WARNA_PENGELUARAN[k.kategori]||'#94a3b8' %>;height:100%;width:<%= pct %>%;border-radius:3px;"></div>
+            </div>
+          </div>
+          <% }) %>
+        <% } %>
+      </div>
+
+      <!-- Detail Transaksi Pengeluaran -->
+      <div class="card" style="padding:18px;">
+        <div class="card-header" style="margin-bottom:12px;">
+          <span class="card-title">Detail Pengeluaran</span>
+          <a href="/pengeluaran" class="btn btn-secondary btn-sm">Kelola</a>
+        </div>
+        <% if (pengeluaranDetail.length === 0) { %>
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0;">Tidak ada pengeluaran bulan ini</div>
+        <% } else { %>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Tanggal</th>
+                <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Keterangan</th>
+                <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Kategori</th>
+                <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);">Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% pengeluaranDetail.forEach(p => { %>
+              <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+                <td style="padding:9px 10px;font-size:12px;color:var(--muted);white-space:nowrap;"><%= formatTanggal(p.tanggal) %></td>
+                <td style="padding:9px 10px;font-size:13px;">
+                  <%= p.keterangan %>
+                  <% if (p.catatan) { %>
+                  <div style="font-size:11px;color:var(--muted);"><%= p.catatan.substring(0,60) %><%= p.catatan.length>60?'…':'' %></div>
+                  <% } %>
+                </td>
+                <td style="padding:9px 10px;">
+                  <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:<%= WARNA_PENGELUARAN[p.kategori]||'#94a3b8' %>22;color:<%= WARNA_PENGELUARAN[p.kategori]||'#94a3b8' %>;">
+                    <%= LABEL_KATEGORI_PENGELUARAN[p.kategori]||p.kategori %>
+                  </span>
+                </td>
+                <td style="padding:9px 10px;font-size:13px;font-weight:700;color:var(--danger);text-align:right;white-space:nowrap;"><%= formatRupiah(parseFloat(p.jumlah)) %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" style="padding:10px;font-weight:700;color:var(--muted);border-top:1px solid var(--border);font-size:12px;">Total</td>
+                <td style="padding:10px;font-weight:800;color:var(--danger);border-top:1px solid var(--border);text-align:right;"><%= formatRupiah(pengeluaranBulanTotal) %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- ===== BARIS 4: HIBAH DETAIL + TREN ===== -->
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;margin-bottom:16px;">
+
+      <!-- Pemasukan Lain Detail -->
+      <div class="card" style="padding:18px;">
+        <div class="card-header" style="margin-bottom:12px;">
+          <span class="card-title">Hibah & Donasi</span>
+          <a href="/pemasukan" class="btn btn-secondary btn-sm">Kelola</a>
+        </div>
+        <% if (pemasukanDetail.length === 0) { %>
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0;">Tidak ada pemasukan lain bulan ini</div>
+        <% } else { %>
+          <% pemasukanDetail.forEach(p => { %>
+          <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;truncate;"><%= p.sumber %></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;"><%= formatTanggal(p.tanggal) %> &bull; <%= LABEL_KATEGORI_PEMASUKAN[p.kategori]||p.kategori %></div>
+                <% if (p.keterangan) { %><div style="font-size:11px;color:var(--muted);margin-top:1px;"><%= p.keterangan %></div><% } %>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#8b5cf6;white-space:nowrap;"><%= formatRupiah(parseFloat(p.jumlah)) %></div>
+            </div>
+          </div>
+          <% }) %>
+          <div style="padding-top:10px;display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
+            <span style="color:var(--muted);">Total</span>
+            <span style="color:#8b5cf6;"><%= formatRupiah(hibahBulan) %></span>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Tren 6 Bulan -->
+      <div class="card" style="padding:18px;">
+        <div class="card-header" style="margin-bottom:12px;">
+          <span class="card-title">Tren Keuangan 6 Bulan</span>
+        </div>
+        <canvas id="chartTren" height="160"></canvas>
+      </div>
+    </div>
+
+    <!-- ===== BARIS 5: NERACA KESELURUHAN ===== -->
+    <div class="card" style="padding:18px;">
+      <div class="card-header" style="margin-bottom:16px;"><span class="card-title">Neraca Keuangan Keseluruhan (Sejak Awal Operasi)</span></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;">
+        <% const neraca = [
+          { label:'Beban Bulanan', value: bebanBulananTotal, color:'var(--primary)', sub:'dari tagihan lunas' },
+          { label:'Biaya Pemakaian Air', value: subtotalAirTotal, color:'var(--success)', sub: kubikTotal.toLocaleString('id-ID',{maximumFractionDigits:0})+' m³ total' },
+          { label:'Hibah / Donasi', value: hibahTotal, color:'#8b5cf6', sub:'pemasukan non-tagihan' },
+          { label:'Total Pengeluaran', value: pengeluaranAllTotal, color:'var(--danger)', sub:'seluruh beban operasional' },
+        ]; %>
+        <% neraca.forEach((n,i) => { %>
+        <div style="padding:16px;text-align:center;<%= i < neraca.length-1 ? 'border-right:1px solid var(--border);' : '' %>">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;"><%= n.label %></div>
+          <div style="font-size:18px;font-weight:800;color:<%= n.color %>;"><%= formatRupiah(n.value) %></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;"><%= n.sub %></div>
+        </div>
+        <% }) %>
+        <div style="padding:16px;text-align:center;background:<%= saldoTotal >= 0 ? 'rgba(14,165,233,.06)' : 'rgba(239,68,68,.06)' %>;border-radius:8px;margin:4px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Saldo Bersih</div>
+          <div style="font-size:20px;font-weight:800;color:<%= saldoTotal >= 0 ? 'var(--primary)' : 'var(--danger)' %>;"><%= saldoTotal < 0 ? '-' : '' %><%= formatRupiah(Math.abs(saldoTotal)) %></div>
+          <div style="font-size:12px;font-weight:700;color:<%= saldoTotal >= 0 ? 'var(--success)' : 'var(--danger)' %>;margin-top:3px;"><%= saldoTotal >= 0 ? '▲ Surplus' : '▼ Defisit' %></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const trenData = <%- tren %>;
+
+// Donut chart pengeluaran per kategori
+<% if (pengeluaranPerKategori.length > 0) { %>
+new Chart(document.getElementById('chartPie').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    labels: [<% pengeluaranPerKategori.forEach((k,i) => { %>'<%= LABEL_KATEGORI_PENGELUARAN[k.kategori]||k.kategori %>'<%= i<pengeluaranPerKategori.length-1?',':'' %><% }) %>],
+    datasets: [{
+      data: [<% pengeluaranPerKategori.forEach((k,i) => { %><%= parseFloat(k.total) %><%= i<pengeluaranPerKategori.length-1?',':'' %><% }) %>],
+      backgroundColor: [<% pengeluaranPerKategori.forEach((k,i) => { %>'<%= WARNA_PENGELUARAN[k.kategori]||"#94a3b8" %>'<%= i<pengeluaranPerKategori.length-1?',':'' %><% }) %>],
+      borderWidth: 0,
+    }],
+  },
+  options: {
+    responsive: true,
+    cutout: '65%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' Rp ' + ctx.parsed.toLocaleString('id-ID') } },
+    },
+  },
+});
+<% } %>
+
+// Bar chart tren 6 bulan
+new Chart(document.getElementById('chartTren').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: trenData.map(d => d.label),
+    datasets: [
+      { label: 'Beban Bulanan', data: trenData.map(d => d.beban), backgroundColor: 'rgba(14,165,233,.3)', borderColor: '#0ea5e9', borderWidth: 2, borderRadius: 4 },
+      { label: 'Biaya Air', data: trenData.map(d => d.air), backgroundColor: 'rgba(16,185,129,.3)', borderColor: '#10b981', borderWidth: 2, borderRadius: 4 },
+      { label: 'Hibah', data: trenData.map(d => d.hibah), backgroundColor: 'rgba(139,92,246,.3)', borderColor: '#8b5cf6', borderWidth: 2, borderRadius: 4 },
+      { label: 'Pengeluaran', data: trenData.map(d => d.keluar), backgroundColor: 'rgba(239,68,68,.25)', borderColor: '#ef4444', borderWidth: 2, borderRadius: 4 },
+    ],
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index' },
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+      tooltip: { callbacks: { label: ctx => ' Rp ' + ctx.parsed.y.toLocaleString('id-ID') } },
+    },
+    scales: {
+      x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.04)' } },
+      y: { ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => 'Rp '+(v/1000).toFixed(0)+'k' }, grid: { color: 'rgba(255,255,255,.04)' } },
+    },
+  },
+});
+</script>
+</body>
+</html>

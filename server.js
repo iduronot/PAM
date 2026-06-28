@@ -49,6 +49,7 @@ app.use('/pembayaran', require('./routes/pembayaran'));
 app.use('/pengaduan', require('./routes/pengaduan'));
 app.use('/pengeluaran', require('./routes/pengeluaran'));
 app.use('/pemasukan', require('./routes/pemasukan'));
+app.use('/keuangan', require('./routes/keuangan'));
 app.use('/laporan', require('./routes/laporan'));
 app.use('/pengaturan', require('./routes/pengaturan'));
 app.use('/akun', require('./routes/akun'));
