@@ -142,7 +142,6 @@
               <th style="<%= th %>text-align:right;color:var(--primary);">Dari Abodemen</th>
               <th style="<%= th %>text-align:right;color:var(--success);">Dari Pemakaian Air</th>
               <th style="<%= th %>text-align:right;color:#8b5cf6;">Dari Hibah</th>
-              <th style="<%= th %>text-align:right;color:var(--muted);">Tdk Ditentukan</th>
               <th style="<%= th %>text-align:right;color:var(--danger);">Total Keluar</th>
               <th style="<%= th %>text-align:right;color:var(--muted);">Saldo</th>
             </tr>
@@ -162,9 +161,6 @@
               <td style="padding:11px 14px;text-align:right;color:#8b5cf6;">
                 <%- row.keluarHibah > 0 ? formatRupiah(row.keluarHibah) : '<span style="color:var(--muted)">—</span>' %>
               </td>
-              <td style="padding:11px 14px;text-align:right;color:var(--warning);">
-                <%- row.keluarLain > 0 ? formatRupiah(row.keluarLain) : '<span style="color:var(--muted)">—</span>' %>
-              </td>
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--danger);">
                 <%- row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
               </td>
@@ -180,7 +176,6 @@
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--primary);"><%= formatRupiah(totKelAbodemen) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totKelAir) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totKelHibah) %></td>
-              <td style="padding:12px 14px;text-align:right;font-weight:700;color:var(--warning);"><%= totKelLain > 0 ? formatRupiah(totKelLain) : '—' %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--danger);"><%= formatRupiah(totKeluar) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:<%= totSaldo >= 0 ? 'var(--success)' : 'var(--danger)' %>;">
                 <%= totSaldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(totSaldo)) %>
