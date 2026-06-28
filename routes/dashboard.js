@@ -15,6 +15,8 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
     const awalBulanDepan = new Date(tahunIni, bulanIni, 1);
 
     const tagihanBulanWhere = { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } };
+    const tagihanLunasBulanWhere = { status: 'lunas', createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } };
+    const tagihanLunasAllWhere  = { status: 'lunas' };
 
     const [
       totalPelangganAktif, totalPelangganNonaktif,
@@ -40,9 +42,9 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       Pengeluaran.sum('jumlah'),
       Pemasukan.sum('jumlah', { where: { tanggal: { [Op.gte]: awalBulan.toISOString().slice(0,10), [Op.lt]: awalBulanDepan.toISOString().slice(0,10) } } }),
       Pemasukan.sum('jumlah'),
-      Tagihan.sum('biaya_admin',   { where: tagihanBulanWhere }),
-      Tagihan.sum('biaya_minimum', { where: tagihanBulanWhere }),
-      Tagihan.sum('subtotal_air',  { where: tagihanBulanWhere }),
+      Tagihan.sum('biaya_admin',   { where: tagihanLunasBulanWhere }),
+      Tagihan.sum('biaya_minimum', { where: tagihanLunasBulanWhere }),
+      Tagihan.sum('subtotal_air',  { where: tagihanLunasBulanWhere }),
       Tagihan.sum('pemakaian',     { where: tagihanBulanWhere }),
       Tagihan.sum('pemakaian',     { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] } } }),
     ]);
