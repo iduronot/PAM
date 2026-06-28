@@ -89,8 +89,17 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       totalTunggakan: totalTunggakan || 0,
       pelangganMenunggak,
       pengaduanBaru, pengaduanBelumSelesai,
-      pemasukanBulanIni: totalPemasukanBulanIni,
+      // Biaya pemakaian air (iuran dari pelanggan)
+      iuranAirBulan: pemasukanBulanIni || 0,
+      iuranAirTotal: pemasukanTotal || 0,
+      // Pemasukan lain (hibah / donasi)
       hibahBulanIni: hibahBulanIni || 0,
+      hibahTotal: hibahTotal || 0,
+      // Beban operasional
+      bebanBulan: pengeluaranBulanIni || 0,
+      bebanTotal: pengeluaranTotal || 0,
+      // Gabungan & saldo
+      pemasukanBulanIni: totalPemasukanBulanIni,
       pengeluaranBulanIni: pengeluaranBulanIni || 0,
       saldoBulanIni,
       pemasukanTotal: totalPemasukanTotal,
