@@ -83,22 +83,22 @@
               <td style="padding:11px 14px;color:var(--muted);font-size:12px;"><%= idx + 1 %></td>
               <td style="padding:11px 14px;font-weight:600;white-space:nowrap;"><%= row.namaBulan %> <%= tahun %></td>
               <td style="padding:11px 14px;text-align:right;color:var(--primary);font-weight:600;">
-                <%= row.bebanBulanan > 0 ? formatRupiah(row.bebanBulanan) : '<span style="color:var(--muted)">—</span>' %>
+                <%- row.bebanBulanan > 0 ? formatRupiah(row.bebanBulanan) : '<span style="color:var(--muted)">—</span>' %>
               </td>
               <td style="padding:11px 14px;text-align:right;color:var(--success);font-weight:600;">
-                <%= row.biayaAir > 0 ? formatRupiah(row.biayaAir) : '<span style="color:var(--muted)">—</span>' %>
+                <%- row.biayaAir > 0 ? formatRupiah(row.biayaAir) : '<span style="color:var(--muted)">—</span>' %>
               </td>
               <td style="padding:11px 14px;text-align:right;color:var(--muted);">
                 <%= row.kubik > 0 ? row.kubik.toLocaleString('id-ID',{maximumFractionDigits:2}) : '—' %>
               </td>
               <td style="padding:11px 14px;text-align:right;color:#8b5cf6;">
-                <%= row.hibah > 0 ? formatRupiah(row.hibah) : '<span style="color:var(--muted)">—</span>' %>
+                <%- row.hibah > 0 ? formatRupiah(row.hibah) : '<span style="color:var(--muted)">—</span>' %>
               </td>
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--success);">
-                <%= row.totalMasuk > 0 ? formatRupiah(row.totalMasuk) : '<span style="color:var(--muted)">—</span>' %>
+                <%- row.totalMasuk > 0 ? formatRupiah(row.totalMasuk) : '<span style="color:var(--muted)">—</span>' %>
               </td>
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--danger);">
-                <%= row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
+                <%- row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
               </td>
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:<%= row.saldo > 0 ? 'var(--success)' : row.saldo < 0 ? 'var(--danger)' : 'var(--muted)' %>;">
                 <% if (row.adaData) { %><%= row.saldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(row.saldo)) %><% } else { %>—<% } %>
