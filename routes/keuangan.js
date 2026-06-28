@@ -100,6 +100,42 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
       order: [['jumlah', 'DESC']],
     });
 
+    // Tabel ringkasan 12 bulan tahun yang dipilih
+    const NAMA_BULAN_PANJANG = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const tabelBulanan = [];
+    for (let bln = 1; bln <= 12; bln++) {
+      const awal = new Date(tahun, bln - 1, 1);
+      const akhir = new Date(tahun, bln, 1);
+      const awalS = awal.toISOString().slice(0, 10);
+      const akhirS = akhir.toISOString().slice(0, 10);
+      const lWhere = { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } };
+      const [bAdmin, bMin, sAir, kubik, bayar, hibahM, keluar] = await Promise.all([
+        Tagihan.sum('biaya_admin',   { where: lWhere }),
+        Tagihan.sum('biaya_minimum', { where: lWhere }),
+        Tagihan.sum('subtotal_air',  { where: lWhere }),
+        Tagihan.sum('pemakaian',     { where: { status: { [Op.in]: ['final','lunas','terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+        Pembayaran.sum('jumlah_bayar', { where: { tanggal_bayar: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+        Pemasukan.sum('jumlah',  { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+        Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+      ]);
+      const beban = (bAdmin || 0) + (bMin || 0);
+      const air   = sAir || 0;
+      const masuk = (bayar || 0) + (hibahM || 0);
+      const keluar2 = keluar || 0;
+      tabelBulanan.push({
+        bulan: bln,
+        namaBulan: NAMA_BULAN_PANJANG[bln - 1],
+        bebanBulanan: beban,
+        biayaAir: air,
+        kubik: parseFloat(kubik || 0),
+        hibah: hibahM || 0,
+        totalMasuk: masuk,
+        pengeluaran: keluar2,
+        saldo: masuk - keluar2,
+        adaData: masuk > 0 || keluar2 > 0,
+      });
+    }
+
     // Tren 6 bulan
     const NAMA_BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     const tren = [];
@@ -163,6 +199,8 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
       LABEL_KATEGORI_PEMASUKAN,
       WARNA_PENGELUARAN,
       tren: JSON.stringify(tren),
+      tabelBulanan,
+      tahunTabel: tahun,
     });
   } catch (e) {
     console.error(e);
