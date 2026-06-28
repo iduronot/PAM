@@ -5,6 +5,7 @@ const { requireRole } = require('../middleware/auth');
 const { Tagihan, Pembayaran, Pengeluaran, Pemasukan, Pelanggan } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
+const xl = require('excel4node');
 
 const LABEL_KATEGORI_PENGELUARAN = {
   operasional: 'Operasional', pemeliharaan: 'Pemeliharaan', gaji: 'Gaji/Honor',
@@ -248,6 +249,186 @@ router.get('/tabel', requireLogin, requireRole('super_admin', 'admin_pam', 'mana
     console.error(e);
     req.flash('error', 'Gagal memuat tabel keuangan');
     res.redirect('/keuangan');
+  }
+});
+
+// Helper: ambil data bulanan (dipakai /tabel dan /tabel/export)
+async function getTabelBulanan(tahun) {
+  const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const rows = [];
+  for (let bln = 1; bln <= 12; bln++) {
+    const awal  = new Date(tahun, bln - 1, 1);
+    const akhir = new Date(tahun, bln, 1);
+    const awalS  = awal.toISOString().slice(0, 10);
+    const akhirS = akhir.toISOString().slice(0, 10);
+    const lWhere = { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } };
+    const [bAdmin, bMin, sAir, kubik, bayar, hibahM, keluar, kAbodemen, kAir, kHibah] = await Promise.all([
+      Tagihan.sum('biaya_admin',   { where: lWhere }),
+      Tagihan.sum('biaya_minimum', { where: lWhere }),
+      Tagihan.sum('subtotal_air',  { where: lWhere }),
+      Tagihan.sum('pemakaian',     { where: { status: { [Op.in]: ['final','lunas','terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+      Pembayaran.sum('jumlah_bayar', { where: { tanggal_bayar: { [Op.gte]: awal, [Op.lt]: akhir } } }),
+      Pemasukan.sum('jumlah',    { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+      Pengeluaran.sum('jumlah',  { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+      Pengeluaran.sum('jumlah',  { where: { sumber_dana: 'abodemen',      tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+      Pengeluaran.sum('jumlah',  { where: { sumber_dana: 'pemakaian_air', tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+      Pengeluaran.sum('jumlah',  { where: { sumber_dana: 'hibah',         tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+    ]);
+    const beban = (bAdmin||0) + (bMin||0);
+    const masuk = (bayar||0)  + (hibahM||0);
+    const out   = keluar || 0;
+    rows.push({
+      namaBulan: NAMA_BULAN[bln - 1],
+      bebanBulanan: beban,
+      biayaAir: sAir || 0,
+      kubik: parseFloat(kubik || 0),
+      hibah: hibahM || 0,
+      totalMasuk: masuk,
+      pengeluaran: out,
+      keluarAbodemen: kAbodemen || 0,
+      keluarAir: kAir || 0,
+      keluarHibah: kHibah || 0,
+      saldo: masuk - out,
+    });
+  }
+  return rows;
+}
+
+// GET /keuangan/tabel/export
+router.get('/tabel/export', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer'), async (req, res) => {
+  try {
+    const tahun = parseInt(req.query.tahun) || new Date().getFullYear();
+    const data  = await getTabelBulanan(tahun);
+
+    const wb = new xl.Workbook({ defaultFont: { name: 'Calibri', size: 11 } });
+
+    // ── Styles ──────────────────────────────────────────────────
+    const sTitle = wb.createStyle({ font: { bold: true, size: 13 }, alignment: { horizontal: 'left' } });
+    const sHead  = (hex) => wb.createStyle({
+      font: { bold: true, color: '#FFFFFF', size: 10 },
+      fill: { type: 'pattern', patternType: 'solid', fgColor: hex },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: { left:{style:'thin',color:'#FFFFFF'}, right:{style:'thin',color:'#FFFFFF'} },
+    });
+    const sRp    = wb.createStyle({ numberFormat: '#,##0', alignment: { horizontal: 'right' } });
+    const sRpBold= wb.createStyle({ numberFormat: '#,##0', alignment: { horizontal: 'right' }, font: { bold: true } });
+    const sMuted = wb.createStyle({ font: { color: '#888888' }, alignment: { horizontal: 'center' } });
+    const sTot   = (hex) => wb.createStyle({ font: { bold: true, color: hex }, numberFormat: '#,##0', alignment: { horizontal: 'right' }, fill: { type:'pattern', patternType:'solid', fgColor:'#F0F4F8' } });
+    const sBulan = wb.createStyle({ font: { bold: true } });
+
+    const totals = data.reduce((acc, r) => {
+      acc.beban  += r.bebanBulanan; acc.air  += r.biayaAir;  acc.kubik += r.kubik;
+      acc.hibah  += r.hibah;        acc.masuk += r.totalMasuk;
+      acc.keluar += r.pengeluaran;  acc.saldo += r.saldo;
+      acc.kAbodemen += r.keluarAbodemen; acc.kAir += r.keluarAir; acc.kHibah += r.keluarHibah;
+      return acc;
+    }, { beban:0, air:0, kubik:0, hibah:0, masuk:0, keluar:0, saldo:0, kAbodemen:0, kAir:0, kHibah:0 });
+
+    // ── Sheet 1: Pemasukan ──────────────────────────────────────
+    const ws1 = wb.addWorksheet('Pemasukan');
+    ws1.column(1).setWidth(5);  ws1.column(2).setWidth(18);
+    ws1.column(3).setWidth(18); ws1.column(4).setWidth(20);
+    ws1.column(5).setWidth(12); ws1.column(6).setWidth(18); ws1.column(7).setWidth(18);
+
+    ws1.cell(1,1,1,7,true).string(`Rekap Pemasukan ${tahun}`).style(sTitle);
+    const h1 = sHead('#1e40af');
+    ['No','Bulan','Beban Bulanan (Rp)','Biaya Pemakaian Air (Rp)','Kubik (m³)','Hibah / Donasi (Rp)','Total Masuk (Rp)']
+      .forEach((t,i) => ws1.cell(2, i+1).string(t).style(h1));
+
+    data.forEach((r, i) => {
+      const row = i + 3;
+      ws1.cell(row,1).number(i+1).style(sMuted);
+      ws1.cell(row,2).string(r.namaBulan).style(sBulan);
+      r.bebanBulanan > 0 ? ws1.cell(row,3).number(r.bebanBulanan).style(sRp) : ws1.cell(row,3).string('—').style(sMuted);
+      r.biayaAir     > 0 ? ws1.cell(row,4).number(r.biayaAir).style(sRp)     : ws1.cell(row,4).string('—').style(sMuted);
+      ws1.cell(row,5).number(r.kubik).style(wb.createStyle({ numberFormat: '#,##0.00', alignment:{horizontal:'right'} }));
+      r.hibah        > 0 ? ws1.cell(row,6).number(r.hibah).style(sRp)        : ws1.cell(row,6).string('—').style(sMuted);
+      r.totalMasuk   > 0 ? ws1.cell(row,7).number(r.totalMasuk).style(sRpBold): ws1.cell(row,7).string('—').style(sMuted);
+    });
+    const tf1 = 15;
+    ws1.cell(tf1,1,tf1,2,true).string(`Total ${tahun}`).style(wb.createStyle({ font:{bold:true} }));
+    ws1.cell(tf1,3).number(totals.beban).style(sTot('#1e40af'));
+    ws1.cell(tf1,4).number(totals.air).style(sTot('#15803d'));
+    ws1.cell(tf1,5).number(totals.kubik).style(sTot('#555555'));
+    ws1.cell(tf1,6).number(totals.hibah).style(sTot('#6d28d9'));
+    ws1.cell(tf1,7).number(totals.masuk).style(sTot('#15803d'));
+
+    // ── Sheet 2: Pengeluaran per Dana ───────────────────────────
+    const ws2 = wb.addWorksheet('Pengeluaran per Dana');
+    ws2.column(1).setWidth(5);  ws2.column(2).setWidth(18);
+    ws2.column(3).setWidth(18); ws2.column(4).setWidth(20);
+    ws2.column(5).setWidth(15); ws2.column(6).setWidth(18); ws2.column(7).setWidth(15);
+
+    ws2.cell(1,1,1,7,true).string(`Rekap Pengeluaran per Dana ${tahun}`).style(sTitle);
+    const h2 = sHead('#991b1b');
+    ['No','Bulan','Dari Abodemen (Rp)','Dari Pemakaian Air (Rp)','Dari Hibah (Rp)','Total Keluar (Rp)','Saldo (Rp)']
+      .forEach((t,i) => ws2.cell(2, i+1).string(t).style(h2));
+
+    data.forEach((r, i) => {
+      const row = i + 3;
+      ws2.cell(row,1).number(i+1).style(sMuted);
+      ws2.cell(row,2).string(r.namaBulan).style(sBulan);
+      r.keluarAbodemen > 0 ? ws2.cell(row,3).number(r.keluarAbodemen).style(sRp) : ws2.cell(row,3).string('—').style(sMuted);
+      r.keluarAir      > 0 ? ws2.cell(row,4).number(r.keluarAir).style(sRp)      : ws2.cell(row,4).string('—').style(sMuted);
+      r.keluarHibah    > 0 ? ws2.cell(row,5).number(r.keluarHibah).style(sRp)    : ws2.cell(row,5).string('—').style(sMuted);
+      r.pengeluaran    > 0 ? ws2.cell(row,6).number(r.pengeluaran).style(sRpBold) : ws2.cell(row,6).string('—').style(sMuted);
+      const sc = r.saldo >= 0 ? '#15803d' : '#dc2626';
+      (r.totalMasuk > 0 || r.pengeluaran > 0)
+        ? ws2.cell(row,7).number(r.saldo).style(wb.createStyle({ numberFormat:'#,##0', alignment:{horizontal:'right'}, font:{bold:true,color:sc} }))
+        : ws2.cell(row,7).string('—').style(sMuted);
+    });
+    const tf2 = 15;
+    ws2.cell(tf2,1,tf2,2,true).string(`Total ${tahun}`).style(wb.createStyle({ font:{bold:true} }));
+    ws2.cell(tf2,3).number(totals.kAbodemen).style(sTot('#1e40af'));
+    ws2.cell(tf2,4).number(totals.kAir).style(sTot('#15803d'));
+    ws2.cell(tf2,5).number(totals.kHibah).style(sTot('#6d28d9'));
+    ws2.cell(tf2,6).number(totals.keluar).style(sTot('#dc2626'));
+    ws2.cell(tf2,7).number(totals.saldo).style(sTot(totals.saldo >= 0 ? '#15803d' : '#dc2626'));
+
+    // ── Sheet 3: Sisa Dana ──────────────────────────────────────
+    const ws3 = wb.addWorksheet('Sisa Dana');
+    ws3.column(1).setWidth(5);  ws3.column(2).setWidth(18);
+    ws3.column(3).setWidth(18); ws3.column(4).setWidth(20);
+    ws3.column(5).setWidth(15); ws3.column(6).setWidth(18);
+
+    ws3.cell(1,1,1,6,true).string(`Rekap Sisa Dana ${tahun}`).style(sTitle);
+    const h3 = sHead('#065f46');
+    ['No','Bulan','Sisa Abodemen (Rp)','Sisa Pemakaian Air (Rp)','Sisa Hibah (Rp)','Total Sisa (Rp)']
+      .forEach((t,i) => ws3.cell(2, i+1).string(t).style(h3));
+
+    data.forEach((r, i) => {
+      const row = i + 3;
+      const sA = r.bebanBulanan - r.keluarAbodemen;
+      const sW = r.biayaAir    - r.keluarAir;
+      const sH = r.hibah       - r.keluarHibah;
+      const sT = sA + sW + sH;
+      ws3.cell(row,1).number(i+1).style(sMuted);
+      ws3.cell(row,2).string(r.namaBulan).style(sBulan);
+      const mkSisa = (v) => wb.createStyle({ numberFormat:'#,##0', alignment:{horizontal:'right'}, font:{color: v>=0?'#15803d':'#dc2626'} });
+      ws3.cell(row,3).number(sA).style(mkSisa(sA));
+      ws3.cell(row,4).number(sW).style(mkSisa(sW));
+      ws3.cell(row,5).number(sH).style(mkSisa(sH));
+      ws3.cell(row,6).number(sT).style(wb.createStyle({ numberFormat:'#,##0', alignment:{horizontal:'right'}, font:{bold:true, color:sT>=0?'#15803d':'#dc2626'} }));
+    });
+    const tf3 = 15;
+    const totSA = totals.beban - totals.kAbodemen;
+    const totSW = totals.air   - totals.kAir;
+    const totSH = totals.hibah - totals.kHibah;
+    const totST = totals.saldo;
+    ws3.cell(tf3,1,tf3,2,true).string(`Total ${tahun}`).style(wb.createStyle({ font:{bold:true} }));
+    ws3.cell(tf3,3).number(totSA).style(sTot(totSA>=0?'#15803d':'#dc2626'));
+    ws3.cell(tf3,4).number(totSW).style(sTot(totSW>=0?'#15803d':'#dc2626'));
+    ws3.cell(tf3,5).number(totSH).style(sTot(totSH>=0?'#6d28d9':'#dc2626'));
+    ws3.cell(tf3,6).number(totST).style(sTot(totST>=0?'#15803d':'#dc2626'));
+
+    const filename = `Rekap_Keuangan_${tahun}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    wb.write(filename, res);
+  } catch (e) {
+    console.error(e);
+    req.flash('error', 'Gagal export Excel');
+    res.redirect('/keuangan/tabel');
   }
 });
 
