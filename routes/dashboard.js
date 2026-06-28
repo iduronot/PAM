@@ -14,6 +14,8 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
     const awalBulan = new Date(tahunIni, bulanIni - 1, 1);
     const awalBulanDepan = new Date(tahunIni, bulanIni, 1);
 
+    const tagihanBulanWhere = { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } };
+
     const [
       totalPelangganAktif, totalPelangganNonaktif,
       periodeAktif,
@@ -22,11 +24,13 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       pemasukanBulanIni, pengeluaranBulanIni,
       pemasukanTotal, pengeluaranTotal,
       hibahBulanIni, hibahTotal,
+      // Komponen tagihan bulan ini
+      kompBebanAdmin, kompBebanMinimum, kompSubtotalAir,
     ] = await Promise.all([
       Pelanggan.count({ where: { status: 'aktif' } }),
       Pelanggan.count({ where: { status: { [Op.in]: ['nonaktif', 'putus_sementara', 'putus_permanen'] } } }),
       PeriodeBaca.findOne({ where: { bulan: bulanIni, tahun: tahunIni } }),
-      Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } } }),
+      Tagihan.sum('total_tagihan', { where: tagihanBulanWhere }),
       Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: awalBulan, [Op.lt]: awalBulanDepan } } }),
       Pengaduan.count({ where: { status: 'baru' } }),
       Pengaduan.count({ where: { status: { [Op.notIn]: ['selesai', 'ditolak', 'dibatalkan'] } } }),
@@ -36,7 +40,13 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       Pengeluaran.sum('jumlah'),
       Pemasukan.sum('jumlah', { where: { tanggal: { [Op.gte]: awalBulan.toISOString().slice(0,10), [Op.lt]: awalBulanDepan.toISOString().slice(0,10) } } }),
       Pemasukan.sum('jumlah'),
+      Tagihan.sum('biaya_admin',   { where: tagihanBulanWhere }),
+      Tagihan.sum('biaya_minimum', { where: tagihanBulanWhere }),
+      Tagihan.sum('subtotal_air',  { where: tagihanBulanWhere }),
     ]);
+
+    const bebanBulananBulanIni = (kompBebanAdmin || 0) + (kompBebanMinimum || 0);
+    const pemakaianAirBulanIni = kompSubtotalAir || 0;
 
     const totalTunggakan = await Tagihan.sum('total_tagihan', {
       where: { status: { [Op.in]: ['final', 'terlambat'] } }
@@ -89,13 +99,16 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       totalTunggakan: totalTunggakan || 0,
       pelangganMenunggak,
       pengaduanBaru, pengaduanBelumSelesai,
-      // Biaya pemakaian air (iuran dari pelanggan)
+      // Komponen tagihan pelanggan bulan ini
+      bebanBulananBulanIni,
+      pemakaianAirBulanIni,
+      // Kas masuk (Pembayaran dari pelanggan)
       iuranAirBulan: pemasukanBulanIni || 0,
       iuranAirTotal: pemasukanTotal || 0,
       // Pemasukan lain (hibah / donasi)
       hibahBulanIni: hibahBulanIni || 0,
       hibahTotal: hibahTotal || 0,
-      // Beban operasional
+      // Beban operasional (pengeluaran)
       bebanBulan: pengeluaranBulanIni || 0,
       bebanTotal: pengeluaranTotal || 0,
       // Gabungan & saldo

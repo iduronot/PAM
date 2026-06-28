@@ -54,6 +54,50 @@
       </div>
     </div>
 
+    <!-- Komposisi Tagihan Bulan Ini -->
+    <% if (totalTagihanBulanIni > 0) { %>
+    <div class="card" style="margin-bottom:16px;padding:16px;">
+      <div class="card-header" style="margin-bottom:14px;">
+        <span class="card-title">Komposisi Tagihan Bulan Ini</span>
+        <span style="font-size:12px;color:var(--muted);">Total: <strong style="color:var(--text);"><%= formatRupiah(totalTagihanBulanIni) %></strong></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Beban Bulanan -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Beban Bulanan</div>
+              <div style="font-size:11px;color:var(--muted);">biaya admin / abodemen tetap</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:16px;font-weight:700;color:var(--primary);"><%= formatRupiah(bebanBulananBulanIni) %></div>
+              <div style="font-size:11px;color:var(--muted);"><%= totalTagihanBulanIni > 0 ? Math.round(bebanBulananBulanIni / totalTagihanBulanIni * 100) : 0 %>%</div>
+            </div>
+          </div>
+          <div style="background:var(--sub-bg);border-radius:4px;height:8px;overflow:hidden;">
+            <div style="background:var(--primary);height:100%;border-radius:4px;width:<%= totalTagihanBulanIni > 0 ? Math.round(bebanBulananBulanIni / totalTagihanBulanIni * 100) : 0 %>%;"></div>
+          </div>
+        </div>
+        <!-- Biaya Pemakaian Air -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Biaya Pemakaian Air</div>
+              <div style="font-size:11px;color:var(--muted);">pemakaian m³ × harga tarif</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:16px;font-weight:700;color:var(--success);"><%= formatRupiah(pemakaianAirBulanIni) %></div>
+              <div style="font-size:11px;color:var(--muted);"><%= totalTagihanBulanIni > 0 ? Math.round(pemakaianAirBulanIni / totalTagihanBulanIni * 100) : 0 %>%</div>
+            </div>
+          </div>
+          <div style="background:var(--sub-bg);border-radius:4px;height:8px;overflow:hidden;">
+            <div style="background:var(--success);height:100%;border-radius:4px;width:<%= totalTagihanBulanIni > 0 ? Math.round(pemakaianAirBulanIni / totalTagihanBulanIni * 100) : 0 %>%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
     <!-- Ringkasan Keuangan -->
     <div style="display:grid;grid-template-columns:repeat(<%= hibahBulanIni > 0 ? 4 : 3 %>,1fr);gap:12px;margin-bottom:16px;">
       <div class="card" style="padding:16px;border-left:4px solid var(--success);">
