@@ -8,11 +8,21 @@ const { Op } = require('sequelize');
 
 // List tagihan
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'kasir', 'manajer'), async (req, res) => {
-  const { q, status, periode_id, page = 1 } = req.query;
+  const { q, status, page = 1 } = req.query;
   const limit = 25;
   const offset = (page - 1) * limit;
   const where = {};
   if (status) where.status = status;
+
+  // Auto-pilih periode bulan berjalan jika tidak ada filter periode dari user
+  let periode_id = req.query.periode_id;
+  if (!periode_id && !q && !status) {
+    const now = new Date();
+    const periodeBulanIni = await PeriodeBaca.findOne({
+      where: { bulan: now.getMonth() + 1, tahun: now.getFullYear() },
+    });
+    if (periodeBulanIni) periode_id = String(periodeBulanIni.id);
+  }
   if (periode_id) where.periode_id = periode_id;
 
   const includeOpts = [
