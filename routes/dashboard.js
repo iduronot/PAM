@@ -25,7 +25,7 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       pemasukanTotal, pengeluaranTotal,
       hibahBulanIni, hibahTotal,
       // Komponen tagihan bulan ini
-      kompBebanAdmin, kompBebanMinimum, kompSubtotalAir,
+      kompBebanAdmin, kompBebanMinimum, kompSubtotalAir, kompKubikBulan, kompKubikTotal,
     ] = await Promise.all([
       Pelanggan.count({ where: { status: 'aktif' } }),
       Pelanggan.count({ where: { status: { [Op.in]: ['nonaktif', 'putus_sementara', 'putus_permanen'] } } }),
@@ -43,6 +43,8 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       Tagihan.sum('biaya_admin',   { where: tagihanBulanWhere }),
       Tagihan.sum('biaya_minimum', { where: tagihanBulanWhere }),
       Tagihan.sum('subtotal_air',  { where: tagihanBulanWhere }),
+      Tagihan.sum('pemakaian',     { where: tagihanBulanWhere }),
+      Tagihan.sum('pemakaian',     { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] } } }),
     ]);
 
     const bebanBulananBulanIni = (kompBebanAdmin || 0) + (kompBebanMinimum || 0);
@@ -102,6 +104,8 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       // Komponen tagihan pelanggan bulan ini
       bebanBulananBulanIni,
       pemakaianAirBulanIni,
+      kubikBulanIni: parseFloat(kompKubikBulan || 0),
+      kubikTotal: parseFloat(kompKubikTotal || 0),
       // Kas masuk (Pembayaran dari pelanggan)
       iuranAirBulan: pemasukanBulanIni || 0,
       iuranAirTotal: pemasukanTotal || 0,
