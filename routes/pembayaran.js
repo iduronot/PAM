@@ -16,10 +16,19 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // List pembayaran
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'kasir', 'manajer'), async (req, res) => {
-  const { q, tanggal_dari, tanggal_sampai, metode, page = 1 } = req.query;
+  const { q, metode, page = 1 } = req.query;
   const limit = 25;
   const offset = (page - 1) * limit;
   const where = {};
+
+  // Default ke bulan berjalan jika tidak ada filter dari user
+  const now = new Date();
+  const defaultDari   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  const lastDay       = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const defaultSampai = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+
+  const tanggal_dari   = req.query.dari   || (!q && !metode ? defaultDari   : '');
+  const tanggal_sampai = req.query.sampai || (!q && !metode ? defaultSampai : '');
 
   if (tanggal_dari && tanggal_sampai) {
     where.tanggal_bayar = { [Op.between]: [tanggal_dari, tanggal_sampai] };
