@@ -40,6 +40,19 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Sumber Dana</label>
+            <select name="sumber_dana" class="form-control">
+              <option value="">— Belum ditentukan —</option>
+              <option value="abodemen"     <%= pengeluaran.sumber_dana==='abodemen'     ? 'selected' : '' %>>Dana Abodemen (Beban Bulanan)</option>
+              <option value="pemakaian_air"<%= pengeluaran.sumber_dana==='pemakaian_air'? 'selected' : '' %>>Dana Pemakaian Air</option>
+              <option value="hibah"        <%= pengeluaran.sumber_dana==='hibah'        ? 'selected' : '' %>>Dana Hibah / Donasi</option>
+            </select>
+            <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block;">
+              Pilih dari mana pengeluaran ini diambilkan. Biarkan kosong jika belum ditentukan.
+            </small>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Keterangan *</label>
             <input type="text" name="keterangan" class="form-control" value="<%= pengeluaran.keterangan || '' %>" required placeholder="Deskripsi pengeluaran...">
           </div>

@@ -41,6 +41,12 @@
           <option value="<%= k %>" <%= kategori===k?'selected':'' %>><%= v %></option>
           <% }) %>
         </select>
+        <select name="sumber_dana" class="form-control" style="width:auto;">
+          <option value="">Semua Sumber Dana</option>
+          <option value="abodemen"      <%= (typeof sumber_dana !== 'undefined' && sumber_dana==='abodemen')      ? 'selected':'' %>>Dana Abodemen</option>
+          <option value="pemakaian_air" <%= (typeof sumber_dana !== 'undefined' && sumber_dana==='pemakaian_air') ? 'selected':'' %>>Dana Pemakaian Air</option>
+          <option value="hibah"         <%= (typeof sumber_dana !== 'undefined' && sumber_dana==='hibah')         ? 'selected':'' %>>Dana Hibah</option>
+        </select>
         <input name="dari" type="date" class="form-control" style="width:auto;" value="<%= dari||'' %>" title="Dari tanggal">
         <input name="sampai" type="date" class="form-control" style="width:auto;" value="<%= sampai||'' %>" title="Sampai tanggal">
         <button type="submit" class="btn btn-primary">Filter</button>
@@ -55,6 +61,7 @@
               <th>No. Pengeluaran</th>
               <th>Tanggal</th>
               <th>Kategori</th>
+              <th>Sumber Dana</th>
               <th>Keterangan</th>
               <th>Jumlah</th>
               <th>Metode</th>
@@ -64,7 +71,7 @@
           </thead>
           <tbody>
             <% if (list.length === 0) { %>
-            <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Belum ada data pengeluaran</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:32px;">Belum ada data pengeluaran</td></tr>
             <% } %>
             <% list.forEach((p, i) => { %>
             <tr>
@@ -74,6 +81,17 @@
               <td>
                 <% const warna = { operasional:'info', pemeliharaan:'warning', gaji:'success', utilitas:'muted', perlengkapan:'muted', lain_lain:'muted' }; %>
                 <span class="badge badge-<%= warna[p.kategori] || 'muted' %>"><%= LABEL_KATEGORI[p.kategori] || p.kategori %></span>
+              </td>
+              <td>
+                <% if (p.sumber_dana === 'abodemen') { %>
+                  <span class="badge badge-info">Abodemen</span>
+                <% } else if (p.sumber_dana === 'pemakaian_air') { %>
+                  <span class="badge badge-success">Pemakaian Air</span>
+                <% } else if (p.sumber_dana === 'hibah') { %>
+                  <span class="badge" style="background:rgba(139,92,246,.15);color:#c4b5fd;">Hibah</span>
+                <% } else { %>
+                  <span style="color:var(--muted);font-size:12px;">—</span>
+                <% } %>
               </td>
               <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= p.keterangan %>"><%= p.keterangan %></td>
               <td><strong style="color:var(--danger);"><%= formatRupiah(p.jumlah) %></strong></td>

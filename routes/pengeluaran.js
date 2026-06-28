@@ -25,7 +25,7 @@ async function genNoPengeluaran() {
 
 // Index
 router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer'), async (req, res) => {
-  const { q, kategori, dari, sampai, page = 1 } = req.query;
+  const { q, kategori, sumber_dana, dari, sampai, page = 1 } = req.query;
   const limit = 20;
   const offset = (parseInt(page) - 1) * limit;
   const where = {};
@@ -35,6 +35,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
     { keterangan: { [Op.like]: `%${q}%` } },
   ];
   if (kategori) where.kategori = kategori;
+  if (sumber_dana) where.sumber_dana = sumber_dana;
   if (dari) where.tanggal = { ...where.tanggal, [Op.gte]: dari };
   if (sampai) where.tanggal = { ...where.tanggal, [Op.lte]: sampai };
 
@@ -52,7 +53,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
     currentPage: 'pengeluaran',
     list: rows, count, total: total || 0,
     totalPages: Math.ceil(count / limit), page: parseInt(page), limit,
-    q, kategori, dari, sampai, LABEL_KATEGORI,
+    q, kategori, sumber_dana, dari, sampai, LABEL_KATEGORI,
   });
 });
 

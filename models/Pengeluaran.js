@@ -10,6 +10,11 @@ const Pengeluaran = sequelize.define('Pengeluaran', {
     allowNull: false,
     defaultValue: 'operasional',
   },
+  sumber_dana: {
+    type: DataTypes.ENUM('abodemen','pemakaian_air','hibah'),
+    allowNull: true,
+    defaultValue: null,
+  },
   keterangan: { type: DataTypes.STRING(255), allowNull: false },
   jumlah: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
   metode_bayar: {
