@@ -170,6 +170,7 @@
                 <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Tanggal</th>
                 <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Keterangan</th>
                 <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Kategori</th>
+                <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Sumber Dana</th>
                 <th style="font-size:11px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);">Jumlah</th>
               </tr>
             </thead>
@@ -188,13 +189,24 @@
                     <%= LABEL_KATEGORI_PENGELUARAN[p.kategori]||p.kategori %>
                   </span>
                 </td>
+                <td style="padding:9px 10px;">
+                  <% if (p.sumber_dana === 'abodemen') { %>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(14,165,233,.15);color:#38bdf8;">Abodemen</span>
+                  <% } else if (p.sumber_dana === 'pemakaian_air') { %>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(16,185,129,.15);color:#34d399;">Pemakaian Air</span>
+                  <% } else if (p.sumber_dana === 'hibah') { %>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(139,92,246,.15);color:#c4b5fd;">Hibah</span>
+                  <% } else { %>
+                    <span style="font-size:11px;color:var(--muted);">—</span>
+                  <% } %>
+                </td>
                 <td style="padding:9px 10px;font-size:13px;font-weight:700;color:var(--danger);text-align:right;white-space:nowrap;"><%= formatRupiah(parseFloat(p.jumlah)) %></td>
               </tr>
               <% }) %>
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3" style="padding:10px;font-weight:700;color:var(--muted);border-top:1px solid var(--border);font-size:12px;">Total</td>
+                <td colspan="4" style="padding:10px;font-weight:700;color:var(--muted);border-top:1px solid var(--border);font-size:12px;">Total</td>
                 <td style="padding:10px;font-weight:800;color:var(--danger);border-top:1px solid var(--border);text-align:right;"><%= formatRupiah(pengeluaranBulanTotal) %></td>
               </tr>
             </tfoot>
@@ -202,6 +214,76 @@
         </div>
         <% } %>
       </div>
+    </div>
+
+    <!-- ===== BARIS 3b: NERACA PER SUMBER DANA ===== -->
+    <div class="card" style="margin-bottom:16px;padding:18px;">
+      <div class="card-header" style="margin-bottom:16px;">
+        <span class="card-title">Neraca per Sumber Dana — <%= BULAN_LABEL %></span>
+        <span style="font-size:12px;color:var(--muted);">Masuk vs Keluar per jenis dana</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+
+        <!-- Dana Abodemen -->
+        <% const saldoAbodemen = bebanBulananBulan - keluarAbodemenBulan; %>
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid var(--primary);">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Dana Abodemen</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--muted);">Masuk (beban):</span>
+            <span style="font-size:13px;font-weight:700;color:var(--primary);"><%= formatRupiah(bebanBulananBulan) %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--muted);">Keluar:</span>
+            <span style="font-size:13px;font-weight:700;color:var(--danger);"><%= formatRupiah(keluarAbodemenBulan) %></span>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;font-weight:700;color:var(--text);">Saldo:</span>
+            <span style="font-size:15px;font-weight:800;color:<%= saldoAbodemen >= 0 ? 'var(--success)' : 'var(--danger)' %>;"><%= saldoAbodemen < 0 ? '-' : '' %><%= formatRupiah(Math.abs(saldoAbodemen)) %></span>
+          </div>
+        </div>
+
+        <!-- Dana Pemakaian Air -->
+        <% const saldoAir = subtotalAirBulan - keluarAirBulan; %>
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid var(--success);">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Dana Pemakaian Air</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--muted);">Masuk (biaya air):</span>
+            <span style="font-size:13px;font-weight:700;color:var(--success);"><%= formatRupiah(subtotalAirBulan) %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--muted);">Keluar:</span>
+            <span style="font-size:13px;font-weight:700;color:var(--danger);"><%= formatRupiah(keluarAirBulan) %></span>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;font-weight:700;color:var(--text);">Saldo:</span>
+            <span style="font-size:15px;font-weight:800;color:<%= saldoAir >= 0 ? 'var(--success)' : 'var(--danger)' %>;"><%= saldoAir < 0 ? '-' : '' %><%= formatRupiah(Math.abs(saldoAir)) %></span>
+          </div>
+        </div>
+
+        <!-- Dana Hibah -->
+        <% const saldoHibah = hibahBulan - keluarHibahBulan; %>
+        <div style="background:var(--sub-bg);border-radius:10px;padding:14px;border-top:3px solid #8b5cf6;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Dana Hibah / Donasi</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--muted);">Masuk (hibah):</span>
+            <span style="font-size:13px;font-weight:700;color:#8b5cf6;"><%= formatRupiah(hibahBulan) %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--muted);">Keluar:</span>
+            <span style="font-size:13px;font-weight:700;color:var(--danger);"><%= formatRupiah(keluarHibahBulan) %></span>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;font-weight:700;color:var(--text);">Saldo:</span>
+            <span style="font-size:15px;font-weight:800;color:<%= saldoHibah >= 0 ? 'var(--success)' : 'var(--danger)' %>;"><%= saldoHibah < 0 ? '-' : '' %><%= formatRupiah(Math.abs(saldoHibah)) %></span>
+          </div>
+        </div>
+      </div>
+      <% if (keluarLainBulan > 0) { %>
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(245,158,11,.08);border-radius:8px;border:1px solid rgba(245,158,11,.2);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--warning);">⚠ Pengeluaran belum ditentukan sumber dananya</span>
+        <span style="font-size:14px;font-weight:700;color:var(--warning);"><%= formatRupiah(keluarLainBulan) %></span>
+      </div>
+      <% } %>
     </div>
 
     <!-- ===== BARIS 4: HIBAH DETAIL + TREN ===== -->

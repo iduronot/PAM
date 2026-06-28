@@ -87,6 +87,20 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
       raw: true,
     });
 
+    // Pengeluaran per sumber dana bulan ini
+    const pengeluaranPerSumber = await Pengeluaran.findAll({
+      attributes: ['sumber_dana', [sequelize.fn('SUM', sequelize.col('jumlah')), 'total']],
+      where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } },
+      group: ['sumber_dana'],
+      raw: true,
+    });
+    const kelMap = {};
+    pengeluaranPerSumber.forEach(r => { kelMap[r.sumber_dana || '__lain'] = parseFloat(r.total) || 0; });
+    const keluarAbodemenBulan  = kelMap['abodemen']      || 0;
+    const keluarAirBulan       = kelMap['pemakaian_air'] || 0;
+    const keluarHibahBulan     = kelMap['hibah']         || 0;
+    const keluarLainBulan      = kelMap['__lain']        || 0;
+
     // Detail pengeluaran bulan ini (10 teratas)
     const pengeluaranDetail = await Pengeluaran.findAll({
       where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } },
@@ -159,6 +173,7 @@ router.get('/', requireLogin, requireRole('super_admin', 'admin_pam', 'manajer')
       pengeluaranPerKategori,
       pengeluaranDetail,
       pemasukanDetail,
+      keluarAbodemenBulan, keluarAirBulan, keluarHibahBulan, keluarLainBulan,
       LABEL_KATEGORI_PENGELUARAN,
       LABEL_KATEGORI_PEMASUKAN,
       WARNA_PENGELUARAN,
@@ -186,7 +201,7 @@ router.get('/tabel', requireLogin, requireRole('super_admin', 'admin_pam', 'mana
       const awalS  = awal.toISOString().slice(0, 10);
       const akhirS = akhir.toISOString().slice(0, 10);
       const lWhere = { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } };
-      const [bAdmin, bMin, sAir, kubik, bayar, hibahM, keluar] = await Promise.all([
+      const [bAdmin, bMin, sAir, kubik, bayar, hibahM, keluar, kAbodemen, kAir, kHibah] = await Promise.all([
         Tagihan.sum('biaya_admin',   { where: lWhere }),
         Tagihan.sum('biaya_minimum', { where: lWhere }),
         Tagihan.sum('subtotal_air',  { where: lWhere }),
@@ -194,6 +209,9 @@ router.get('/tabel', requireLogin, requireRole('super_admin', 'admin_pam', 'mana
         Pembayaran.sum('jumlah_bayar', { where: { tanggal_bayar: { [Op.gte]: awal, [Op.lt]: akhir } } }),
         Pemasukan.sum('jumlah',   { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
         Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+        Pengeluaran.sum('jumlah', { where: { sumber_dana: 'abodemen',      tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+        Pengeluaran.sum('jumlah', { where: { sumber_dana: 'pemakaian_air', tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
+        Pengeluaran.sum('jumlah', { where: { sumber_dana: 'hibah',         tanggal: { [Op.gte]: awalS, [Op.lt]: akhirS } } }),
       ]);
       const beban = (bAdmin || 0) + (bMin || 0);
       const masuk = (bayar  || 0) + (hibahM || 0);
@@ -207,6 +225,10 @@ router.get('/tabel', requireLogin, requireRole('super_admin', 'admin_pam', 'mana
         hibah: hibahM || 0,
         totalMasuk: masuk,
         pengeluaran: out,
+        keluarAbodemen: kAbodemen || 0,
+        keluarAir: kAir || 0,
+        keluarHibah: kHibah || 0,
+        keluarLain: out - (kAbodemen||0) - (kAir||0) - (kHibah||0),
         saldo: masuk - out,
         adaData: masuk > 0 || out > 0,
       });

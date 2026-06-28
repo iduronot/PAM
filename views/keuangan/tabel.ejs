@@ -27,14 +27,19 @@
 
     <%
       let totBeban=0, totAir=0, totKubik=0, totHibah=0, totMasuk=0, totKeluar=0, totSaldo=0;
+      let totKelAbodemen=0, totKelAir=0, totKelHibah=0, totKelLain=0;
       tabelBulanan.forEach(r => {
-        totBeban  += r.bebanBulanan;
-        totAir    += r.biayaAir;
-        totKubik  += r.kubik;
-        totHibah  += r.hibah;
-        totMasuk  += r.totalMasuk;
-        totKeluar += r.pengeluaran;
-        totSaldo  += r.saldo;
+        totBeban      += r.bebanBulanan;
+        totAir        += r.biayaAir;
+        totKubik      += r.kubik;
+        totHibah      += r.hibah;
+        totMasuk      += r.totalMasuk;
+        totKeluar     += r.pengeluaran;
+        totSaldo      += r.saldo;
+        totKelAbodemen += r.keluarAbodemen;
+        totKelAir      += r.keluarAir;
+        totKelHibah    += r.keluarHibah;
+        totKelLain     += r.keluarLain;
       });
     %>
 
@@ -65,16 +70,23 @@
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
+            <% const thBase = 'padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;'; %>
             <tr style="background:var(--sub-bg);">
-              <th style="padding:12px 14px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">No</th>
-              <th style="padding:12px 14px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Bulan</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Beban Bulanan</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Biaya Pemakaian Air</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Kubik (m³)</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:#8b5cf6;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Hibah / Donasi</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Total Masuk</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--danger);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Pengeluaran</th>
-              <th style="padding:12px 14px;text-align:right;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;">Saldo</th>
+              <th rowspan="2" style="<%= thBase %>text-align:left;color:var(--muted);">No</th>
+              <th rowspan="2" style="<%= thBase %>text-align:left;color:var(--muted);">Bulan</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--primary);">Beban Bulanan</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--success);">Biaya Air</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--muted);">Kubik (m³)</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:#8b5cf6;">Hibah</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--success);">Total Masuk</th>
+              <th colspan="4" style="<%= thBase %>text-align:center;color:var(--danger);border-left:2px solid rgba(239,68,68,.25);">Pengeluaran per Sumber Dana</th>
+              <th rowspan="2" style="<%= thBase %>text-align:right;color:var(--muted);">Saldo</th>
+            </tr>
+            <tr style="background:var(--sub-bg);">
+              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--primary);border-bottom:2px solid var(--border);white-space:nowrap;border-left:2px solid rgba(239,68,68,.25);">Abodemen</th>
+              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--success);border-bottom:2px solid var(--border);white-space:nowrap;">Pemakaian Air</th>
+              <th style="padding:6px 12px;font-size:10px;text-align:right;color:#8b5cf6;border-bottom:2px solid var(--border);white-space:nowrap;">Hibah</th>
+              <th style="padding:6px 12px;font-size:10px;text-align:right;color:var(--danger);border-bottom:2px solid var(--border);white-space:nowrap;font-weight:700;">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -97,8 +109,20 @@
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--success);">
                 <%- row.totalMasuk > 0 ? formatRupiah(row.totalMasuk) : '<span style="color:var(--muted)">—</span>' %>
               </td>
-              <td style="padding:11px 14px;text-align:right;font-weight:700;color:var(--danger);">
+              <td style="padding:11px 12px;text-align:right;color:var(--primary);border-left:2px solid rgba(239,68,68,.15);">
+                <%- row.keluarAbodemen > 0 ? formatRupiah(row.keluarAbodemen) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 12px;text-align:right;color:var(--success);">
+                <%- row.keluarAir > 0 ? formatRupiah(row.keluarAir) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 12px;text-align:right;color:#8b5cf6;">
+                <%- row.keluarHibah > 0 ? formatRupiah(row.keluarHibah) : '<span style="color:var(--muted)">—</span>' %>
+              </td>
+              <td style="padding:11px 12px;text-align:right;font-weight:700;color:var(--danger);">
                 <%- row.pengeluaran > 0 ? formatRupiah(row.pengeluaran) : '<span style="color:var(--muted)">—</span>' %>
+                <% if (row.keluarLain > 0) { %>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px;">+<%= formatRupiah(row.keluarLain) %> tdk ditentukan</div>
+                <% } %>
               </td>
               <td style="padding:11px 14px;text-align:right;font-weight:700;color:<%= row.saldo > 0 ? 'var(--success)' : row.saldo < 0 ? 'var(--danger)' : 'var(--muted)' %>;">
                 <% if (row.adaData) { %><%= row.saldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(row.saldo)) %><% } else { %>—<% } %>
@@ -114,7 +138,10 @@
               <td style="padding:12px 14px;text-align:right;font-weight:700;color:var(--muted);"><%= totKubik.toLocaleString('id-ID',{maximumFractionDigits:1}) %> m³</td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totHibah) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totMasuk) %></td>
-              <td style="padding:12px 14px;text-align:right;font-weight:800;color:var(--danger);"><%= formatRupiah(totKeluar) %></td>
+              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--primary);border-left:2px solid rgba(239,68,68,.25);"><%= formatRupiah(totKelAbodemen) %></td>
+              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--success);"><%= formatRupiah(totKelAir) %></td>
+              <td style="padding:12px 12px;text-align:right;font-weight:800;color:#8b5cf6;"><%= formatRupiah(totKelHibah) %></td>
+              <td style="padding:12px 12px;text-align:right;font-weight:800;color:var(--danger);"><%= formatRupiah(totKeluar) %></td>
               <td style="padding:12px 14px;text-align:right;font-weight:800;color:<%= totSaldo >= 0 ? 'var(--success)' : 'var(--danger)' %>;">
                 <%= totSaldo < 0 ? '-' : '' %><%= formatRupiah(Math.abs(totSaldo)) %>
               </td>
