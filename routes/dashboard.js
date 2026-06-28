@@ -80,14 +80,15 @@ router.get('/', requireLogin, requireNotPelanggan, async (req, res) => {
       const akhir = new Date(thn, bln, 1);
       const awalStr = awal.toISOString().slice(0, 10);
       const akhirStr = akhir.toISOString().slice(0, 10);
-      const [total, lunas, keluar, hibah] = await Promise.all([
+      const [total, lunas, keluar, hibah, kubik] = await Promise.all([
         Tagihan.sum('total_tagihan', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
         Tagihan.sum('total_tagihan', { where: { status: 'lunas', createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
         Pengeluaran.sum('jumlah', { where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } } }),
         Pemasukan.sum('jumlah', { where: { tanggal: { [Op.gte]: awalStr, [Op.lt]: akhirStr } } }),
+        Tagihan.sum('pemakaian', { where: { status: { [Op.in]: ['final', 'lunas', 'terlambat'] }, createdAt: { [Op.gte]: awal, [Op.lt]: akhir } } }),
       ]);
       const namaBln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][bln - 1];
-      chartData.push({ label: `${namaBln} ${thn}`, total: total || 0, lunas: (lunas || 0) + (hibah || 0), keluar: keluar || 0 });
+      chartData.push({ label: `${namaBln} ${thn}`, total: total || 0, lunas: (lunas || 0) + (hibah || 0), keluar: keluar || 0, kubik: parseFloat(kubik || 0) });
     }
 
     const totalPemasukanBulanIni = (pemasukanBulanIni || 0) + (hibahBulanIni || 0);

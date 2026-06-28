@@ -169,26 +169,34 @@
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Tren Tagihan & Pembayaran 6 Bulan</span>
+    <!-- Charts 2 kolom -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Tren Tagihan &amp; Pembayaran 6 Bulan</span>
+        </div>
+        <canvas id="chartTagihan" height="120"></canvas>
       </div>
-      <canvas id="chartTagihan" height="80"></canvas>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Tren Pemakaian Air 6 Bulan (m&#179;)</span>
+        </div>
+        <canvas id="chartKubik" height="120"></canvas>
+      </div>
     </div>
   </div>
 </div>
 <script>
 const data = <%- chartData %>;
-const ctx = document.getElementById('chartTagihan').getContext('2d');
-new Chart(ctx, {
+
+new Chart(document.getElementById('chartTagihan').getContext('2d'), {
   type: 'bar',
   data: {
     labels: data.map(d => d.label),
     datasets: [
-      { label: 'Total Tagihan', data: data.map(d => d.total), backgroundColor: 'rgba(14,165,233,.25)', borderColor: '#0EA5E9', borderWidth: 2, borderRadius: 6 },
-      { label: 'Terbayar (Pemasukan)', data: data.map(d => d.lunas), backgroundColor: 'rgba(16,185,129,.25)', borderColor: '#10B981', borderWidth: 2, borderRadius: 6 },
-      { label: 'Pengeluaran', data: data.map(d => d.keluar), backgroundColor: 'rgba(239,68,68,.25)', borderColor: '#EF4444', borderWidth: 2, borderRadius: 6 },
+      { label: 'Total Tagihan',        data: data.map(d => d.total),  backgroundColor: 'rgba(14,165,233,.25)', borderColor: '#0EA5E9', borderWidth: 2, borderRadius: 6 },
+      { label: 'Terbayar (Pemasukan)', data: data.map(d => d.lunas),  backgroundColor: 'rgba(16,185,129,.25)', borderColor: '#10B981', borderWidth: 2, borderRadius: 6 },
+      { label: 'Pengeluaran',          data: data.map(d => d.keluar), backgroundColor: 'rgba(239,68,68,.25)',  borderColor: '#EF4444', borderWidth: 2, borderRadius: 6 },
     ],
   },
   options: {
@@ -197,6 +205,32 @@ new Chart(ctx, {
     scales: {
       x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.05)' } },
       y: { ticks: { color: '#94A3B8', callback: v => 'Rp ' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,.05)' } },
+    },
+  },
+});
+
+new Chart(document.getElementById('chartKubik').getContext('2d'), {
+  type: 'line',
+  data: {
+    labels: data.map(d => d.label),
+    datasets: [{
+      label: 'Pemakaian Air (m³)',
+      data: data.map(d => d.kubik),
+      backgroundColor: 'rgba(14,165,233,.15)',
+      borderColor: '#0EA5E9',
+      borderWidth: 2,
+      pointBackgroundColor: '#0EA5E9',
+      pointRadius: 4,
+      fill: true,
+      tension: 0.4,
+    }],
+  },
+  options: {
+    responsive: true, interaction: { mode: 'index' },
+    plugins: { legend: { labels: { color: '#94A3B8', font: { family: 'Outfit' } } } },
+    scales: {
+      x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.05)' } },
+      y: { beginAtZero: true, ticks: { color: '#94A3B8', callback: v => v.toLocaleString('id') + ' m³' }, grid: { color: 'rgba(255,255,255,.05)' } },
     },
   },
 });
